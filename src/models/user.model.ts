@@ -22,6 +22,9 @@ const userSchema = new Schema<IUser>({
     avatar: {
         type: String,
     },
+    photoId: {
+        type: String,
+    },
     phone: {
         type: String,
     },
