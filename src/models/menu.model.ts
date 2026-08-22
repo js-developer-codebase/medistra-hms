@@ -1,10 +1,22 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, models } from "mongoose";
 import { IMenu } from "@/interfaces/menu.interface";
 
 const menuSchema = new Schema<IMenu>({
-    name: String,
-    path: String,
-    icon: String,
+    name: {
+        type: String,
+        required: [true, "Name is required"],
+        trim: true
+    },
+    path: {
+        type: String,
+        trim: true,
+        default: ""
+    },
+    icon: {
+        type: String,
+        trim: true,
+        default: ""
+    },
     children: {
         type: [Types.ObjectId],
         ref: "Menu",
@@ -12,4 +24,4 @@ const menuSchema = new Schema<IMenu>({
     }
 }, { timestamps: true });
 
-export default model<IMenu>("Menu", menuSchema);
+export default models?.Menu || model<IMenu>("Menu", menuSchema);
