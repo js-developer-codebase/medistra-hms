@@ -3,34 +3,35 @@ import dbConnect from "@/lib/dbConnect";
 import menuService, { MenuService } from "@/services/menu.service";
 
 export class MenuController {
-    constructor(private service: MenuService = menuService) {}
+    constructor(private service: MenuService = menuService) { }
 
-    async createMenu(request: NextRequest): Promise<NextResponse> {
+    async createMenu(request: NextRequest) {
         try {
             await dbConnect();
             const body = await request.json();
+            const existingMenu = await this.service.findByName(body.name);
 
-            const newMenu = await this.service.createMenu(body);
+            if (existingMenu) {
+                const error: any = new Error("Menu already exists");
+                error.statusCode = 400;
+                throw error;
+            }
 
-            return NextResponse.json(
-                {
-                    success: true,
-                    message: "Menu created successfully",
-                    data: newMenu
-                },
-                { status: 201 }
-            );
+            const existingPath = await this.service.findByPath(body.path);
+
+            if (existingPath) {
+                const error: any = new Error("Menu path already exists");
+                error.statusCode = 400;
+                throw error;
+            }
+            return await this.service.createMenu(body);
         } catch (error: any) {
-            console.error("MenuController createMenu Error:", error);
-
-            const statusCode = error?.statusCode || 500;
-
             return NextResponse.json(
                 {
                     success: false,
                     message: error?.message || "Failed to create menu"
                 },
-                { status: statusCode }
+                { status: 500 }
             );
         }
     }

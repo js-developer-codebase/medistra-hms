@@ -90,6 +90,14 @@ export class MenuService {
 
         return menu;
     }
+
+    async findByName(name: string): Promise<IMenu | null> {
+        return await this.repository.findByName(name);
+    }
+
+    async findByPath(path: string): Promise<IMenu | null> {
+        return await this.repository.findByPath(path);
+    }
 }
 
 export default new MenuService();
