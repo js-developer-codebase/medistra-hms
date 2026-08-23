@@ -45,4 +45,31 @@ export class OrganizationController {
             );
         }
     }
+
+    async getOrganizations(): Promise<NextResponse> {
+        try {
+            await dbConnect();
+            const organizations = await this.organizationService.getAllOrganizations();
+            return NextResponse.json(
+                {
+                    success: true,
+                    count: organizations.length,
+                    data: organizations
+                },
+                { status: 200 }
+            );
+        } catch (error: any) {
+            console.error("OrganizationController getOrganizations Error:", error);
+            const statusCode = error?.statusCode || 500;
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: error?.message || "Failed to fetch organizations"
+                },
+                { status: statusCode }
+            );
+        }
+    }
 }
+
+export default new OrganizationController();
