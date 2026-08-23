@@ -5,6 +5,7 @@ export interface IUser extends Document {
     password: string;
     gender: string;
     avatar?: string;
+    photoId?: string;
     phone?: string;
     role: Types.ObjectId;
     organization: Types.ObjectId;
