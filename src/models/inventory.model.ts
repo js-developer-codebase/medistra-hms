@@ -10,6 +10,10 @@ const inventorySchema = new Schema<IInventory>({
         type: String,
         required: true
     },
+    price: {
+        type: Number,
+        required: true
+    },
     inward: {
         type: Number,
         required: true
