@@ -1,7 +1,6 @@
 import Menu from "@/models/menu.model";
 import { IMenu } from "@/interfaces/menu.interface";
 import { Types } from "mongoose";
-import { promises } from "dns";
 
 export class MenuRepository {
     async create(data: { name: string; path?: string; icon?: string; children?: Types.ObjectId[] }): Promise<IMenu> {
