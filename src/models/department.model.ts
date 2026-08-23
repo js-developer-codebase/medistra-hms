@@ -37,9 +37,9 @@ const departmentSchema = new Schema<IDepartment>(
             required: true,
             trim: true
         },
-        branchId: {
+        organizationId: {
             type: Types.ObjectId,
-            ref: 'Branch',
+            ref: 'Organization',
             required: true
         },
         isActive: {
