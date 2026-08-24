@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import bedService, { BedService } from "@/services/bed.service";
+import defaultBedService, { BedService } from "@/services/bed.service";
 import { CreateBedDto, UpdateBedDto } from "@/dto/bed.dto";
 
 export class BedController {
-    constructor(private bedService: BedService = bedService) { }
+    constructor(private bedService: BedService = defaultBedService) { }
 
     async createBed(request: NextRequest): Promise<NextResponse> {
         try {

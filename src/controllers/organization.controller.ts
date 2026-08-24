@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import dbConnect from "@/lib/dbConnect";
-import organizationService, { OrganizationService } from "@/services/organization.service";
+import defaultOrganizationService, { OrganizationService } from "@/services/organization.service";
 import { CreateOrganizationDto } from "@/dto/organization.dto";
 
 export class OrganizationController {
-    constructor(private organizationService: OrganizationService = organizationService) { }
+    constructor(private organizationService: OrganizationService = defaultOrganizationService) { }
 
     async createOrganization(request: NextRequest): Promise<NextResponse> {
         try {

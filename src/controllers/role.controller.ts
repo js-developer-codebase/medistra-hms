@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import roleService, { RoleService } from "@/services/role.service";
+import defaultRoleService, { RoleService } from "@/services/role.service";
 import { CreateRoleDto, UpdateRoleDto } from "@/dto/role.dto";
 
 export class RoleController {
-    constructor(private roleService: RoleService = roleService) { }
+    constructor(private roleService: RoleService = defaultRoleService) { }
 
     async createRole(request: NextRequest): Promise<NextResponse> {
         try {

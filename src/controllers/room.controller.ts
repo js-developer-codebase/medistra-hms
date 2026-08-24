@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import roomService, { RoomService } from "@/services/room.service";
+import defaultRoomService, { RoomService } from "@/services/room.service";
 import { CreateRoomDto, UpdateRoomDto } from "@/dto/room.dto";
 
 export class RoomController {
-    constructor(private roomService: RoomService = roomService) { }
+    constructor(private roomService: RoomService = defaultRoomService) { }
 
     async createRoom(request: NextRequest): Promise<NextResponse> {
         try {

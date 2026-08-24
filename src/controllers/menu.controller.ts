@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
-import menuService, { MenuService } from "@/services/menu.service";
+import defaultMenuService, { MenuService } from "@/services/menu.service";
 
 export class MenuController {
-    constructor(private service: MenuService = menuService) { }
+    constructor(private service: MenuService = defaultMenuService) { }
 
     async createMenu(request: NextRequest) {
         try {
