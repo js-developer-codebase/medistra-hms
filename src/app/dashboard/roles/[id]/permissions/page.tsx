@@ -65,8 +65,9 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
   function togglePermission(idx: number, perm: string) {
     setModules(prev => prev.map((m, i) => {
       if (i !== idx) return m;
-      const has = m.permissions.includes(perm);
-      return { ...m, permissions: has ? m.permissions.filter(p => p !== perm) : [...m.permissions, perm] };
+      const perms = m.permissions ?? [];
+      const has = perms.includes(perm);
+      return { ...m, permissions: has ? perms.filter(p => p !== perm) : [...perms, perm] };
     }));
   }
 
@@ -145,7 +146,7 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   {PERMISSION_OPTIONS.map(perm => {
-                    const active = mod.permissions.includes(perm);
+                    const active = (mod.permissions ?? []).includes(perm);
                     return (
                       <button key={perm} type="button" onClick={() => !isSuperAdmin && togglePermission(idx, perm)} disabled={isSuperAdmin}
                         className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all border ${

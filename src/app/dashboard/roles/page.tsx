@@ -53,10 +53,10 @@ export default function ManageRolesPage() {
     } catch { toast("Error deleting role", "error"); } finally { setDeleteLoading(false); }
   }
 
-  const getPermissionsSummary = (access: ModuleAccess[]) => {
+  const getPermissionsSummary = (access?: ModuleAccess[]) => {
     if (!access || access.length === 0) return "No permissions";
     if (access.length === 1 && access[0].moduleName === "ALL") return "Full System Access";
-    const totalPerms = access.reduce((acc, curr) => acc + curr.permissions.length, 0);
+    const totalPerms = access.reduce((acc, curr) => acc + (curr.permissions?.length ?? 0), 0);
     return `${access.length} Modules (${totalPerms} permissions)`;
   };
 
@@ -99,6 +99,7 @@ export default function ManageRolesPage() {
               <TableBody>
                 {roles.map((role) => {
                   const isSuperAdmin = role.role === "SUPER_ADMIN";
+                  const access = role.access ?? [];
                   return (
                     <TableRow key={role._id}>
                       <TableCell>
@@ -107,17 +108,17 @@ export default function ManageRolesPage() {
                           {isSuperAdmin && <Badge variant="warning" className="text-[10px] uppercase">Built-in</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-500 text-sm">{getPermissionsSummary(role.access)}</TableCell>
+                      <TableCell className="text-slate-500 text-sm">{getPermissionsSummary(access)}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                            {isSuperAdmin ? (
                              <Badge variant="default" className="text-[10px]"><Check className="h-3 w-3 mr-1" />All Access</Badge>
                            ) : (
-                             role.access.slice(0, 3).map((a, i) => (
+                             access.slice(0, 3).map((a, i) => (
                                <Badge key={i} variant="outline" className="text-[10px] bg-slate-50 dark:bg-slate-900">{a.moduleName}</Badge>
                              ))
                            )}
-                           {!isSuperAdmin && role.access.length > 3 && <Badge variant="secondary" className="text-[10px]">+{role.access.length - 3} more</Badge>}
+                           {!isSuperAdmin && access.length > 3 && <Badge variant="secondary" className="text-[10px]">+{access.length - 3} more</Badge>}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
