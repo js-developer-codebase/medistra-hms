@@ -46,66 +46,77 @@ const menusData = [
     },
     {
         name: "Patient Management",
-        path: "/patients",
+        path: "/dashboard/patients",
         icon: "Users",
         children: [
-            { name: "Add Patient", path: "/patients/add", icon: "UserPlus" },
-            { name: "View Patients", path: "/patients/list", icon: "List" }
+            { name: "Add Patient", path: "/dashboard/patients/add", icon: "UserPlus" },
+            { name: "View Patients", path: "/dashboard/patients/list", icon: "List" }
         ]
     },
     {
         name: "Doctor Management",
-        path: "/doctors",
+        path: "/dashboard/doctors",
         icon: "Stethoscope",
         children: [
-            { name: "Add Doctor", path: "/doctors/add", icon: "UserPlus" },
-            { name: "View Doctors", path: "/doctors/list", icon: "List" }
+            { name: "Add Doctor", path: "/dashboard/doctors/add", icon: "UserPlus" },
+            { name: "View Doctors", path: "/dashboard/doctors/list", icon: "List" }
         ]
     },
     {
         name: "Appointments",
-        path: "/appointments",
+        path: "/dashboard/appointments",
         icon: "Calendar",
         children: [
-            { name: "Book Appointment", path: "/appointments/book", icon: "CalendarPlus" },
-            { name: "View Appointments", path: "/appointments/list", icon: "List" }
+            { name: "Book Appointment", path: "/dashboard/appointments/book", icon: "CalendarPlus" },
+            { name: "View Appointments", path: "/dashboard/appointments/list", icon: "List" }
         ]
     },
     {
         name: "Admissions",
-        path: "/admissions",
+        path: "/dashboard/admissions",
         icon: "Bed",
         children: [
-            { name: "New Admission", path: "/admissions/new", icon: "PlusCircle" },
-            { name: "View Admissions", path: "/admissions/list", icon: "List" }
+            { name: "New Admission", path: "/dashboard/admissions/new", icon: "PlusCircle" },
+            { name: "View Admissions", path: "/dashboard/admissions/list", icon: "List" }
         ]
     },
     {
         name: "Ward Management",
-        path: "/wards",
+        path: "/dashboard/wards",
         icon: "Building",
         children: [
-            { name: "Wards", path: "/wards/list", icon: "Layout" },
-            { name: "Rooms", path: "/wards/rooms", icon: "DoorOpen" },
-            { name: "Beds", path: "/wards/beds", icon: "BedDouble" }
+            { name: "Wards", path: "/dashboard/wards/list", icon: "Layout" },
+            { name: "Rooms", path: "/dashboard/wards/rooms", icon: "DoorOpen" },
+            { name: "Beds", path: "/dashboard/wards/beds", icon: "BedDouble" }
         ]
     },
     {
         name: "Inventory",
-        path: "/inventory",
+        path: "/dashboard/inventory",
         icon: "Package",
         children: [
-            { name: "Add Item", path: "/inventory/add", icon: "Plus" },
-            { name: "Stock List", path: "/inventory/list", icon: "List" }
+            { name: "Add Item", path: "/dashboard/inventory/add", icon: "Plus" },
+            { name: "Stock List", path: "/dashboard/inventory/list", icon: "List" }
         ]
     },
     {
         name: "Billing & Invoices",
-        path: "/billing",
+        path: "/dashboard/billing",
         icon: "Receipt",
         children: [
-            { name: "Create Invoice", path: "/billing/create", icon: "FilePlus" },
-            { name: "View Invoices", path: "/billing/list", icon: "List" }
+            { name: "Create Invoice", path: "/dashboard/billing/create", icon: "FilePlus" },
+            { name: "View Invoices", path: "/dashboard/billing/list", icon: "List" }
+        ]
+    },
+    {
+        name: "Administration",
+        path: "/dashboard/admin",
+        icon: "Settings",
+        children: [
+            { name: "Create User", path: "/dashboard/users/create", icon: "UserPlus" },
+            { name: "Manage Users", path: "/dashboard/users", icon: "Users" },
+            { name: "Create Role", path: "/dashboard/roles/create", icon: "ShieldPlus" },
+            { name: "Manage Roles", path: "/dashboard/roles", icon: "Shield" },
         ]
     }
 ];
