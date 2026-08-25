@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, model, Types } from "mongoose";
 import { IPatient } from "@/interfaces/patient.interface";
 
 const patientSchema = new Schema<IPatient>(
@@ -50,5 +50,5 @@ const patientSchema = new Schema<IPatient>(
         }
     }, { timestamps: true })
 
-const Patient = model<IPatient>('Patient', patientSchema);
+const Patient = mongoose.models.Patient || model<IPatient>('Patient', patientSchema);
 export default Patient;

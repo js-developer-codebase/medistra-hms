@@ -1,42 +1,64 @@
-import inventoryRepository, { InventoryRepository } from "@/repositories/inventory.repository";
-import { Types } from "mongoose";
-import { IInventory } from "@/interfaces/inventory.interface";
-import { CreateInventoryDto, UpdateInventoryDto } from "@/dto/inventory.dto";
+import InventoryItem from "@/models/inventory-item.model";
+import StockTransaction from "@/models/stock-transaction.model";
+import { IInventoryItem } from "@/interfaces/inventory-item.interface";
+import { IStockTransaction } from "@/interfaces/stock-transaction.interface";
 
 export class InventoryService {
-    constructor(private repository: InventoryRepository = inventoryRepository) { }
-
-    async createInventory(data: CreateInventoryDto): Promise<IInventory> {
-        return await this.repository.create(data);
+    async getItems() {
+        return await InventoryItem.find().sort({ createdAt: -1 });
     }
 
-    async getAllInventories(): Promise<IInventory[]> {
-        return await this.repository.findAll();
+    async getItemById(id: string) {
+        return await InventoryItem.findById(id);
     }
 
-    async getInventoryById(id: Types.ObjectId): Promise<IInventory | null> {
-        return await this.repository.findById(id);
+    async createItem(data: Partial<IInventoryItem>) {
+        return await InventoryItem.create(data);
     }
 
-    async getInventoriesByBranchId(branchId: Types.ObjectId): Promise<IInventory[]> {
-        return await this.repository.findByBranchId(branchId);
+    async updateItem(id: string, data: Partial<IInventoryItem>) {
+        return await InventoryItem.findByIdAndUpdate(id, data, { new: true });
     }
 
-    async updateInventory(id: Types.ObjectId, data: UpdateInventoryDto): Promise<IInventory | null> {
-        const inventory = await this.repository.findById(id);
-        if (!inventory) {
-            throw { statusCode: 404, message: "Inventory item not found" };
+    async deleteItem(id: string) {
+        return await InventoryItem.findByIdAndDelete(id);
+    }
+
+    async getStockTransactions(itemId?: string) {
+        if (itemId) {
+            return await StockTransaction.find({ itemId }).populate('itemId').sort({ transactionDate: -1 });
         }
-        return await this.repository.update(id, data);
+        return await StockTransaction.find().populate('itemId').sort({ transactionDate: -1 });
     }
 
-    async deleteInventory(id: Types.ObjectId): Promise<IInventory | null> {
-        const inventory = await this.repository.findById(id);
-        if (!inventory) {
-            throw { statusCode: 404, message: "Inventory item not found" };
+    async createStockTransaction(data: Partial<IStockTransaction>) {
+        const session = await InventoryItem.startSession();
+        session.startTransaction();
+        try {
+            const transaction = await StockTransaction.create([data], { session });
+            const item = await InventoryItem.findById(data.itemId).session(session);
+            if (!item) throw new Error("Item not found");
+
+            if (data.transactionType === "IN") {
+                item.currentStock += data.quantity || 0;
+            } else if (data.transactionType === "OUT") {
+                item.currentStock -= data.quantity || 0;
+            } else if (data.transactionType === "ADJUSTMENT") {
+                item.currentStock = data.quantity || 0; // Assuming adjustment sets absolute stock or could be delta. Let's make it delta.
+                // Wait, typically adjustment might just be the exact stock difference. Let's assume quantity is delta (+/-).
+                item.currentStock += data.quantity || 0;
+            }
+
+            await item.save({ session });
+            await session.commitTransaction();
+            return transaction[0];
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
-        return await this.repository.delete(id);
     }
 }
 
-export default new InventoryService();
+export const inventoryService = new InventoryService();

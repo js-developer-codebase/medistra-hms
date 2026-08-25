@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, model, Types } from "mongoose";
 import { IAdmission } from "@/interfaces/admission.interface";
 
 const admissionSchema = new Schema<IAdmission>(
@@ -55,5 +55,5 @@ const admissionSchema = new Schema<IAdmission>(
         }
     }, { timestamps: true });
 
-const Admission = model<IAdmission>('Admission', admissionSchema);
+const Admission = mongoose.models.Admission || model<IAdmission>('Admission', admissionSchema);
 export default Admission;

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import defaultInventoryService, { InventoryService } from "@/services/inventory.service";
+import { inventoryService, InventoryService } from "@/services/inventory.service";
 import { CreateInventoryDto, UpdateInventoryDto } from "@/dto/inventory.dto";
 
 export class InventoryController {
-    constructor(private inventoryService: InventoryService = defaultInventoryService) { }
+    constructor(private svc: InventoryService = inventoryService) { }
 
     async createInventory(request: NextRequest): Promise<NextResponse> {
         try {
@@ -26,7 +26,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.inventoryService.createInventory(data);
+            const inventory = await this.svc.createItem(data);
 
             return NextResponse.json(
                 { success: true, message: "Inventory item created successfully", data: inventory },
@@ -52,9 +52,9 @@ export class InventoryController {
 
             if (branchId) {
                 if (!Types.ObjectId.isValid(branchId)) return NextResponse.json({ success: false, message: "Invalid branch ID" }, { status: 400 });
-                inventories = await this.inventoryService.getInventoriesByBranchId(new Types.ObjectId(branchId));
+                inventories = await this.svc.getItems();
             } else {
-                inventories = await this.inventoryService.getAllInventories();
+                inventories = await this.svc.getItems();
             }
 
             return NextResponse.json(
@@ -80,7 +80,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.inventoryService.getInventoryById(new Types.ObjectId(id));
+            const inventory = await this.svc.getItemById(id);
             if (!inventory) {
                 return NextResponse.json(
                     { success: false, message: "Inventory item not found" },
@@ -120,7 +120,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.inventoryService.updateInventory(new Types.ObjectId(id), data);
+            const inventory = await this.svc.updateItem(id, data);
 
             return NextResponse.json(
                 { success: true, message: "Inventory item updated successfully", data: inventory },
@@ -146,7 +146,7 @@ export class InventoryController {
                 );
             }
 
-            await this.inventoryService.deleteInventory(new Types.ObjectId(id));
+            await this.svc.deleteItem(id);
 
             return NextResponse.json(
                 { success: true, message: "Inventory item deleted successfully" },

@@ -6,7 +6,7 @@ import { CreateUserDto, UpdateUserDto } from "@/dto/user.dto";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/auth";
 import Role from "@/models/role.model";
-import Organization from "@/models/organization.mode";
+import Organization from "@/models/organization.model";
 import roleHierarchyRepository from "@/repositories/role-hierarchy.repository";
 
 function normalizeId(value: any): string {

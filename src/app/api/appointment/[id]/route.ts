@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import AppointmentController from "@/controllers/appointment.controller";
+import { AppointmentController } from "@/controllers/appointment.controller";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(request: NextRequest, { params }: Params): Promise<NextResponse> {
+export async function GET(request: NextRequest, context: Params): Promise<NextResponse> {
     try {
-        const { id } = await params;
-        return AppointmentController.getAppointmentById(id);
+        return AppointmentController.getById(request, { params: await context.params });
     } catch (e: any) {
         return NextResponse.json({
             success: false,
@@ -15,10 +14,9 @@ export async function GET(request: NextRequest, { params }: Params): Promise<Nex
     }
 }
 
-export async function PUT(request: NextRequest, { params }: Params): Promise<NextResponse> {
+export async function PUT(request: NextRequest, context: Params): Promise<NextResponse> {
     try {
-        const { id } = await params;
-        return AppointmentController.updateAppointment(request, id);
+        return AppointmentController.update(request, { params: await context.params });
     } catch (e: any) {
         return NextResponse.json({
             success: false,
@@ -27,10 +25,9 @@ export async function PUT(request: NextRequest, { params }: Params): Promise<Nex
     }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params): Promise<NextResponse> {
+export async function DELETE(request: NextRequest, context: Params): Promise<NextResponse> {
     try {
-        const { id } = await params;
-        return AppointmentController.deleteAppointment(id);
+        return AppointmentController.delete(request, { params: await context.params });
     } catch (e: any) {
         return NextResponse.json({
             success: false,
