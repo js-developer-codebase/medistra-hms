@@ -37,7 +37,7 @@ export default function CreateRolePage() {
   useEffect(() => {
     async function fetchRoles() {
       try {
-        const res = await fetch("/api/role");
+        const res = await fetch("/api/role?managedOnly=true");
         const json = await res.json();
         if (json.success) {
           setAllRoles(json.data);

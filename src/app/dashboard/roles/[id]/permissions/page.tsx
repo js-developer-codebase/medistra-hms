@@ -39,7 +39,7 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
   // Fetch all roles to populate role dropdown
   const fetchAllRoles = useCallback(async () => {
     try {
-      const res = await fetch("/api/role");
+      const res = await fetch("/api/role?managedOnly=true");
       const json = await res.json();
       if (json.success) setAllRoles(json.data);
     } catch (err) { console.error(err); }

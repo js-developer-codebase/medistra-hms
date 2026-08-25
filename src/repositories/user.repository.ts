@@ -25,7 +25,7 @@ export class UserRepository {
     }
 
     async findByOrganizationId(organizationId: Types.ObjectId): Promise<IUser[]> {
-        return await User.find({ organization: organizationId }).select("-password").populate("role").lean();
+        return await User.find({ organization: organizationId }).select("-password").populate("role").populate("organization").populate("branch").lean();
     }
 
     async update(id: Types.ObjectId, data: UpdateUserDto): Promise<IUser | null> {

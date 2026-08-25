@@ -9,19 +9,19 @@ export class RoleRepository {
     }
 
     async findAll(): Promise<IRole[]> {
-        return await Role.find().populate("managedRoles.roleId").lean();
+        return await Role.find().lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IRole | null> {
-        return await Role.findById(id).populate("managedRoles.roleId").lean();
+        return await Role.findById(id).lean();
     }
 
     async findByName(role: string): Promise<IRole | null> {
-        return await Role.findOne({ role }).populate("managedRoles.roleId").lean();
+        return await Role.findOne({ role }).lean();
     }
 
     async update(id: Types.ObjectId, data: UpdateRoleDto): Promise<IRole | null> {
-        return await Role.findByIdAndUpdate(id, data, { new: true }).populate("managedRoles.roleId").lean();
+        return await Role.findByIdAndUpdate(id, data, { new: true }).lean();
     }
 
     async delete(id: Types.ObjectId): Promise<IRole | null> {

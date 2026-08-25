@@ -20,9 +20,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * @route GET /api/role
  * @desc Get all roles
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
-        return RoleController.getRoles();
+        return RoleController.getRoles(request);
     } catch (e: any) {
         return NextResponse.json({
             success: false,

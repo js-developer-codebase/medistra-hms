@@ -6,6 +6,44 @@ import { CreateRoleDto, UpdateRoleDto } from "@/dto/role.dto";
 import { getServerSession } from "next-auth";
 import authOptions from "@/lib/auth";
 import Role from "@/models/role.model";
+import roleHierarchyRepository from "@/repositories/role-hierarchy.repository";
+
+const ROLE_PERMISSIONS = ["CREATE", "READ", "UPDATE", "DELETE"] as const;
+type RolePermission = typeof ROLE_PERMISSIONS[number];
+
+function normalizeRoleId(value: any): string {
+    if (typeof value === "string") return value;
+    if (value instanceof Types.ObjectId) return value.toString();
+    if (value?._id) return normalizeRoleId(value._id);
+    if (value?.roleId) return normalizeRoleId(value.roleId);
+    if (value?.role) return normalizeRoleId(value.role);
+    if (value?.buffer && Array.isArray(value.buffer?.data)) {
+        return new Types.ObjectId(Buffer.from(value.buffer.data)).toString();
+    }
+    return (value ?? "").toString();
+}
+
+function hasModulePermission(role: any, moduleName: string, permission: RolePermission): boolean {
+    return Boolean(
+        role?.access?.some(
+            (item: any) => item.moduleName === moduleName && item.permissions?.includes(permission)
+        )
+    );
+}
+
+async function getManagedRolePermissions(parentRole: any, targetRoleId: string): Promise<RolePermission[]> {
+    const hierarchy = await roleHierarchyRepository.findByParentAndTarget(
+        parentRole._id,
+        new Types.ObjectId(targetRoleId)
+    );
+
+    if (hierarchy?.permissions) {
+        return hierarchy.permissions as RolePermission[];
+    }
+
+    const legacy = parentRole.managedRoles?.find((item: any) => normalizeRoleId(item) === targetRoleId);
+    return (legacy?.permissions || []) as RolePermission[];
+}
 
 export class RoleController {
     constructor(private roleService: RoleService = defaultRoleService) { }
@@ -22,39 +60,58 @@ export class RoleController {
                 );
             }
 
-            // Security: Ensure user only grants permissions they have
+            // Security: Ensure user only creates roles inside their delegated access.
             const session = await getServerSession(authOptions);
-            if (session?.user?.role) {
-                const creatorRole = await Role.findById(session.user.role);
-                if (creatorRole && creatorRole.role !== "SUPER_ADMIN") {
-                    // 1. Verify Module Access
-                    for (const reqAccess of data.access) {
-                        const creatorAccess = creatorRole.access?.find((a: any) => a.moduleName === reqAccess.moduleName);
-                        if (!creatorAccess) {
-                            return NextResponse.json({ success: false, message: `You do not have access to module: ${reqAccess.moduleName}` }, { status: 403 });
-                        }
-                        for (const p of reqAccess.permissions) {
-                            if (!creatorAccess.permissions.includes(p)) {
-                                return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for module: ${reqAccess.moduleName}` }, { status: 403 });
-                            }
+            if (!session?.user?.role) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const creatorRoleId = normalizeRoleId(session.user.role);
+            if (!Types.ObjectId.isValid(creatorRoleId)) {
+                return NextResponse.json({ success: false, message: "Invalid current user role" }, { status: 403 });
+            }
+
+            const creatorRole = await Role.findById(creatorRoleId);
+            if (!creatorRole) {
+                return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+            }
+
+            if (creatorRole.role !== "SUPER_ADMIN") {
+                if (!hasModulePermission(creatorRole, "Administration", "CREATE")) {
+                    return NextResponse.json(
+                        { success: false, message: "You do not have permission to create roles" },
+                        { status: 403 }
+                    );
+                }
+
+                // 1. Verify Module Access
+                for (const reqAccess of data.access) {
+                    const creatorAccess = creatorRole.access?.find((a: any) => a.moduleName === reqAccess.moduleName);
+                    if (!creatorAccess) {
+                        return NextResponse.json({ success: false, message: `You do not have access to module: ${reqAccess.moduleName}` }, { status: 403 });
+                    }
+                    for (const p of reqAccess.permissions) {
+                        if (!creatorAccess.permissions.includes(p)) {
+                            return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for module: ${reqAccess.moduleName}` }, { status: 403 });
                         }
                     }
+                }
                     
-                    // 2. Verify Managed Roles Access
-                    if (data.managedRoles && Array.isArray(data.managedRoles)) {
-                        for (const reqManaged of data.managedRoles) {
-                            const reqId = ((reqManaged as any).roleId?._id || (reqManaged as any).roleId || (reqManaged as any).role)?.toString();
-                            const creatorManaged = creatorRole.managedRoles?.find((m: any) => {
-                                const mId = (m.roleId?._id || m.roleId)?.toString();
-                                return mId === reqId;
-                            });
-                            if (!creatorManaged) {
-                                return NextResponse.json({ success: false, message: `You do not have permission to manage role ID: ${reqId}` }, { status: 403 });
-                            }
-                            for (const p of reqManaged.permissions) {
-                                if (!creatorManaged.permissions.includes(p)) {
-                                    return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for managed role ID: ${reqId}` }, { status: 403 });
-                                }
+                // 2. Verify Managed Roles Access
+                if (data.managedRoles && Array.isArray(data.managedRoles)) {
+                    for (const reqManaged of data.managedRoles) {
+                        const reqId = normalizeRoleId(reqManaged);
+                        if (!Types.ObjectId.isValid(reqId)) {
+                            return NextResponse.json({ success: false, message: `Invalid managed role ID: ${reqId}` }, { status: 400 });
+                        }
+
+                        const creatorPermissions = await getManagedRolePermissions(creatorRole, reqId);
+                        if (creatorPermissions.length === 0) {
+                            return NextResponse.json({ success: false, message: `You do not have permission to manage role ID: ${reqId}` }, { status: 403 });
+                        }
+                        for (const p of reqManaged.permissions) {
+                            if (!creatorPermissions.includes(p as RolePermission)) {
+                                return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for managed role ID: ${reqId}` }, { status: 403 });
                             }
                         }
                     }
@@ -62,6 +119,34 @@ export class RoleController {
             }
 
             const role = await this.roleService.createRole(data);
+
+            // Sync to dedicated RoleHierarchy table
+            if (data.managedRoles && Array.isArray(data.managedRoles)) {
+                await roleHierarchyRepository.setHierarchiesForParent(
+                    role._id,
+                    data.managedRoles.map((m: any) => ({
+                        targetRole: normalizeRoleId(m),
+                        permissions: m.permissions,
+                    }))
+                );
+            }
+
+            const superAdminRole = await Role.findOne({ role: "SUPER_ADMIN" });
+            if (superAdminRole) {
+                await roleHierarchyRepository.upsertHierarchy(
+                    superAdminRole._id,
+                    role._id,
+                    [...ROLE_PERMISSIONS]
+                );
+            }
+
+            if (creatorRole.role !== "SUPER_ADMIN") {
+                await roleHierarchyRepository.upsertHierarchy(
+                    creatorRole._id,
+                    role._id,
+                    [...ROLE_PERMISSIONS]
+                );
+            }
 
             return NextResponse.json(
                 { success: true, message: "Role created successfully", data: role },
@@ -76,23 +161,48 @@ export class RoleController {
         }
     }
 
-    async getRoles(): Promise<NextResponse> {
+    async getRoles(request?: NextRequest): Promise<NextResponse> {
         try {
             await dbConnect();
             let roles = await this.roleService.getAllRoles();
 
             const session = await getServerSession(authOptions);
             if (session?.user?.role) {
-                const currentUserRole = await Role.findById(session.user.role);
+                const currentUserRoleId = normalizeRoleId(session.user.role);
+                if (!Types.ObjectId.isValid(currentUserRoleId)) {
+                    return NextResponse.json({ success: false, message: "Invalid current user role" }, { status: 403 });
+                }
+
+                const currentUserRole = await Role.findById(currentUserRoleId);
                 if (currentUserRole && currentUserRole.role !== "SUPER_ADMIN") {
-                    // Get IDs of roles they can manage
-                    const managedRoleIds = currentUserRole.managedRoles?.map((mr: any) => (mr.roleId?._id || mr.roleId)?.toString()) || [];
-                    
-                    // Filter roles: they can see roles they manage, plus their own role
-                    roles = roles.filter(r => 
-                        r._id.toString() === currentUserRole._id.toString() || 
-                        managedRoleIds.includes(r._id.toString())
-                    );
+                    let reqPerm: string | null = null;
+                    let managedOnly = false;
+
+                    if (request?.url) {
+                        try {
+                            const { searchParams } = new URL(request.url);
+                            reqPerm = searchParams.get('permission') || searchParams.get('action');
+                            managedOnly = searchParams.get('managedOnly') === 'true';
+                        } catch {}
+                    }
+
+                    // If a specific permission (like CREATE when creating a user) or managedOnly is requested
+                    if (reqPerm || managedOnly) {
+                        const hierarchies = await roleHierarchyRepository.findByParentRole(currentUserRole._id);
+                        const hierarchyIds = hierarchies
+                            .filter((h: any) => !reqPerm || h.permissions?.includes(reqPerm.toUpperCase() as any))
+                            .map((h: any) => (h.targetRole?._id || h.targetRole)?.toString());
+
+                        const legacyIds = currentUserRole.managedRoles
+                            ?.filter((mr: any) => !reqPerm || mr.permissions?.includes(reqPerm.toUpperCase()))
+                            ?.map((mr: any) => (mr.roleId?._id || mr.roleId)?.toString()) || [];
+                        
+                        const managedRoleIds = Array.from(new Set([...hierarchyIds, ...legacyIds]));
+                        roles = roles.filter(r => managedRoleIds.includes(r._id.toString()));
+                    } else {
+                        // In general role management, non-super-admins cannot see/edit SUPER_ADMIN role
+                        roles = roles.filter(r => r.role !== "SUPER_ADMIN");
+                    }
                 }
             }
 
@@ -127,8 +237,27 @@ export class RoleController {
                 );
             }
 
+            // Fetch hierarchies from dedicated RoleHierarchy table
+            const hierarchies = await roleHierarchyRepository.findByParentRole(new Types.ObjectId(id));
+            const roleObj: any = role;
+            
+            if (role.role === "SUPER_ADMIN") {
+                const allRoles = await this.roleService.getAllRoles();
+                roleObj.managedRoles = allRoles
+                    .filter(r => r._id.toString() !== id.toString())
+                    .map(r => ({
+                        roleId: r,
+                        permissions: ["CREATE", "READ", "UPDATE", "DELETE"]
+                    }));
+            } else if (hierarchies && hierarchies.length > 0) {
+                roleObj.managedRoles = hierarchies.map((h: any) => ({
+                    roleId: h.targetRole,
+                    permissions: h.permissions,
+                }));
+            }
+
             return NextResponse.json(
-                { success: true, data: role },
+                { success: true, data: roleObj },
                 { status: 200 }
             );
         } catch (error: any) {
@@ -154,39 +283,59 @@ export class RoleController {
 
             // Security: Ensure user only grants permissions they have
             const session = await getServerSession(authOptions);
-            if (session?.user?.role) {
-                const modifierRole = await Role.findById(session.user.role);
-                if (modifierRole && modifierRole.role !== "SUPER_ADMIN") {
-                    // 1. Verify Module Access
-                    if (data.access && Array.isArray(data.access)) {
-                        for (const reqAccess of data.access) {
-                            const modifierAccess = modifierRole.access?.find((a: any) => a.moduleName === reqAccess.moduleName);
-                            if (!modifierAccess) {
-                                return NextResponse.json({ success: false, message: `You do not have access to module: ${reqAccess.moduleName}` }, { status: 403 });
-                            }
-                            for (const p of reqAccess.permissions) {
-                                if (!modifierAccess.permissions.includes(p)) {
-                                    return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for module: ${reqAccess.moduleName}` }, { status: 403 });
-                                }
+            if (!session?.user?.role) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const modifierRoleId = normalizeRoleId(session.user.role);
+            if (!Types.ObjectId.isValid(modifierRoleId)) {
+                return NextResponse.json({ success: false, message: "Invalid current user role" }, { status: 403 });
+            }
+
+            const modifierRole = await Role.findById(modifierRoleId);
+            if (!modifierRole) {
+                return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+            }
+
+            if (modifierRole.role !== "SUPER_ADMIN") {
+                const modifierPermissionsForRole = await getManagedRolePermissions(modifierRole, id);
+                if (!modifierPermissionsForRole.includes("UPDATE")) {
+                    return NextResponse.json(
+                        { success: false, message: "You do not have permission to update this role" },
+                        { status: 403 }
+                    );
+                }
+
+                // 1. Verify Module Access
+                if (data.access && Array.isArray(data.access)) {
+                    for (const reqAccess of data.access) {
+                        const modifierAccess = modifierRole.access?.find((a: any) => a.moduleName === reqAccess.moduleName);
+                        if (!modifierAccess) {
+                            return NextResponse.json({ success: false, message: `You do not have access to module: ${reqAccess.moduleName}` }, { status: 403 });
+                        }
+                        for (const p of reqAccess.permissions) {
+                            if (!modifierAccess.permissions.includes(p)) {
+                                return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for module: ${reqAccess.moduleName}` }, { status: 403 });
                             }
                         }
                     }
+                }
                     
-                    // 2. Verify Managed Roles Access
-                    if (data.managedRoles && Array.isArray(data.managedRoles)) {
-                        for (const reqManaged of data.managedRoles) {
-                            const reqId = ((reqManaged as any).roleId?._id || (reqManaged as any).roleId || (reqManaged as any).role)?.toString();
-                            const modifierManaged = modifierRole.managedRoles?.find((m: any) => {
-                                const mId = (m.roleId?._id || m.roleId)?.toString();
-                                return mId === reqId;
-                            });
-                            if (!modifierManaged) {
-                                return NextResponse.json({ success: false, message: `You do not have permission to manage role ID: ${reqId}` }, { status: 403 });
-                            }
-                            for (const p of reqManaged.permissions) {
-                                if (!modifierManaged.permissions.includes(p)) {
-                                    return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for managed role ID: ${reqId}` }, { status: 403 });
-                                }
+                // 2. Verify Managed Roles Access
+                if (data.managedRoles && Array.isArray(data.managedRoles)) {
+                    for (const reqManaged of data.managedRoles) {
+                        const reqId = normalizeRoleId(reqManaged);
+                        if (!Types.ObjectId.isValid(reqId)) {
+                            return NextResponse.json({ success: false, message: `Invalid managed role ID: ${reqId}` }, { status: 400 });
+                        }
+
+                        const modifierPermissions = await getManagedRolePermissions(modifierRole, reqId);
+                        if (modifierPermissions.length === 0) {
+                            return NextResponse.json({ success: false, message: `You do not have permission to manage role ID: ${reqId}` }, { status: 403 });
+                        }
+                        for (const p of reqManaged.permissions) {
+                            if (!modifierPermissions.includes(p as RolePermission)) {
+                                return NextResponse.json({ success: false, message: `You cannot grant ${p} permission for managed role ID: ${reqId}` }, { status: 403 });
                             }
                         }
                     }
@@ -194,6 +343,17 @@ export class RoleController {
             }
 
             const role = await this.roleService.updateRole(new Types.ObjectId(id), data);
+
+            // Sync to dedicated RoleHierarchy table
+            if (data.managedRoles && Array.isArray(data.managedRoles)) {
+                await roleHierarchyRepository.setHierarchiesForParent(
+                    new Types.ObjectId(id),
+                    data.managedRoles.map((m: any) => ({
+                        targetRole: normalizeRoleId(m),
+                        permissions: m.permissions,
+                    }))
+                );
+            }
 
             return NextResponse.json(
                 { success: true, message: "Role updated successfully", data: role },
@@ -219,7 +379,41 @@ export class RoleController {
                 );
             }
 
+            const session = await getServerSession(authOptions);
+            if (!session?.user?.role) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const deleterRoleId = normalizeRoleId(session.user.role);
+            if (!Types.ObjectId.isValid(deleterRoleId)) {
+                return NextResponse.json({ success: false, message: "Invalid current user role" }, { status: 403 });
+            }
+
+            const deleterRole = await Role.findById(deleterRoleId);
+            if (!deleterRole) {
+                return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+            }
+
+            if (deleterRole.role !== "SUPER_ADMIN") {
+                const deleterPermissionsForRole = await getManagedRolePermissions(deleterRole, id);
+                if (!deleterPermissionsForRole.includes("DELETE")) {
+                    return NextResponse.json(
+                        { success: false, message: "You do not have permission to delete this role" },
+                        { status: 403 }
+                    );
+                }
+            }
+
+            const roleToDelete = await this.roleService.getRoleById(new Types.ObjectId(id));
+            if (roleToDelete?.role === "SUPER_ADMIN") {
+                return NextResponse.json(
+                    { success: false, message: "SUPER_ADMIN role cannot be deleted" },
+                    { status: 403 }
+                );
+            }
+
             await this.roleService.deleteRole(new Types.ObjectId(id));
+            await roleHierarchyRepository.deleteByRole(new Types.ObjectId(id));
 
             return NextResponse.json(
                 { success: true, message: "Role deleted successfully" },
@@ -236,3 +430,4 @@ export class RoleController {
 }
 
 export default new RoleController();
+
