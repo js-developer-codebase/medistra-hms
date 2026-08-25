@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Menu as MenuIcon, Bell, Search, LogOut, User as UserIcon, Building2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Menu as MenuIcon, Bell, Search, LogOut, User as UserIcon, Building2, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMobileToggle }) => {
   const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 sm:px-6">
@@ -45,6 +47,13 @@ export const Header: React.FC<HeaderProps> = ({ onMobileToggle }) => {
 
       {/* Right: Notifications & User Profile */}
       <div className="flex items-center gap-3">
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+        >
+          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </button>
+
         <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />

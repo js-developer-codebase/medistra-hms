@@ -25,7 +25,7 @@ export class OrganizationService {
         return await this.repository.findByOrganizationId(organizationId);
     }
 
-    async updateOrganization(id: Types.ObjectId, data: { name: string; code?: string; description?: string; address?: string; contact?: string; email?: string; logo?: string; type?: string; parentId?: string; }): Promise<IOrganization | null> {
+    async updateOrganization(id: Types.ObjectId, data: { organizationName?: string; organizationId?: string; organizationType?: string; headQuarter?: Types.ObjectId; branchType?: string; email?: string; phone?: string; address?: string; logo?: string; }): Promise<IOrganization | null> {
         return await this.repository.update(id, data);
     }
 
