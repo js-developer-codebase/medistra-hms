@@ -53,9 +53,9 @@ export default function ManageRolesPage() {
     } catch { toast("Error deleting role", "error"); } finally { setDeleteLoading(false); }
   }
 
-  const getPermissionsSummary = (access?: ModuleAccess[]) => {
+  const getPermissionsSummary = (roleName: string, access?: ModuleAccess[]) => {
+    if (roleName === "SYSTEM_SUPER_ADMIN") return "Full System Access";
     if (!access || access.length === 0) return "No permissions";
-    if (access.length === 1 && access[0].moduleName === "ALL") return "Full System Access";
     const totalPerms = access.reduce((acc, curr) => acc + (curr.permissions?.length ?? 0), 0);
     return `${access.length} Modules (${totalPerms} permissions)`;
   };
@@ -98,7 +98,7 @@ export default function ManageRolesPage() {
               </TableHeader>
               <TableBody>
                 {roles.map((role) => {
-                  const isSuperAdmin = role.role === "SUPER_ADMIN";
+                  const isSuperAdmin = role.role === "SYSTEM_SUPER_ADMIN";
                   const access = role.access ?? [];
                   return (
                     <TableRow key={role._id}>
@@ -108,7 +108,7 @@ export default function ManageRolesPage() {
                           {isSuperAdmin && <Badge variant="warning" className="text-[10px] uppercase">Built-in</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-500 text-sm">{getPermissionsSummary(access)}</TableCell>
+                      <TableCell className="text-slate-500 text-sm">{getPermissionsSummary(role.role, access)}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                            {isSuperAdmin ? (

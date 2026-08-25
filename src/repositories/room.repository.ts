@@ -9,19 +9,19 @@ export class RoomRepository {
     }
 
     async findAll(): Promise<IRoom[]> {
-        return await Room.find().lean();
+        return await Room.find().populate({ path: "wardId", populate: { path: "organizationId" } }).lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IRoom | null> {
-        return await Room.findById(id).lean();
+        return await Room.findById(id).populate({ path: "wardId", populate: { path: "organizationId" } }).lean();
     }
 
     async findByRoomNumber(roomNumber: string): Promise<IRoom | null> {
-        return await Room.findOne({ roomNumber }).lean();
+        return await Room.findOne({ roomNumber }).populate({ path: "wardId", populate: { path: "organizationId" } }).lean();
     }
 
     async findByWardId(wardId: Types.ObjectId): Promise<IRoom[]> {
-        return await Room.find({ wardId }).lean();
+        return await Room.find({ wardId }).populate({ path: "wardId", populate: { path: "organizationId" } }).lean();
     }
 
     async update(id: Types.ObjectId, data: UpdateRoomDto): Promise<IRoom | null> {

@@ -8,8 +8,8 @@ import authOptions from "@/lib/auth";
 import Role from "@/models/role.model";
 import roleHierarchyRepository from "@/repositories/role-hierarchy.repository";
 
-const ROLE_PERMISSIONS = ["CREATE", "READ", "UPDATE", "DELETE"] as const;
-type RolePermission = typeof ROLE_PERMISSIONS[number];
+const ROLE_PERMISSIONS: string[] = [];
+type RolePermission = string;
 
 function normalizeRoleId(value: any): string {
     if (typeof value === "string") return value;
@@ -76,8 +76,8 @@ export class RoleController {
                 return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
             }
 
-            if (creatorRole.role !== "SUPER_ADMIN") {
-                if (!hasModulePermission(creatorRole, "Administration", "CREATE")) {
+            if (creatorRole.role !== "SYSTEM_SUPER_ADMIN") {
+                if (!hasModulePermission(creatorRole, "role", "role.role.create")) {
                     return NextResponse.json(
                         { success: false, message: "You do not have permission to create roles" },
                         { status: 403 }
@@ -131,7 +131,7 @@ export class RoleController {
                 );
             }
 
-            const superAdminRole = await Role.findOne({ role: "SUPER_ADMIN" });
+            const superAdminRole = await Role.findOne({ role: "SYSTEM_SUPER_ADMIN" });
             if (superAdminRole) {
                 await roleHierarchyRepository.upsertHierarchy(
                     superAdminRole._id,
@@ -140,7 +140,7 @@ export class RoleController {
                 );
             }
 
-            if (creatorRole.role !== "SUPER_ADMIN") {
+            if (creatorRole.role !== "SYSTEM_SUPER_ADMIN") {
                 await roleHierarchyRepository.upsertHierarchy(
                     creatorRole._id,
                     role._id,
@@ -174,7 +174,7 @@ export class RoleController {
                 }
 
                 const currentUserRole = await Role.findById(currentUserRoleId);
-                if (currentUserRole && currentUserRole.role !== "SUPER_ADMIN") {
+                if (currentUserRole && currentUserRole.role !== "SYSTEM_SUPER_ADMIN") {
                     let reqPerm: string | null = null;
                     let managedOnly = false;
 
@@ -200,8 +200,8 @@ export class RoleController {
                         const managedRoleIds = Array.from(new Set([...hierarchyIds, ...legacyIds]));
                         roles = roles.filter(r => managedRoleIds.includes(r._id.toString()));
                     } else {
-                        // In general role management, non-super-admins cannot see/edit SUPER_ADMIN role
-                        roles = roles.filter(r => r.role !== "SUPER_ADMIN");
+                        // In general role management, non-super-admins cannot see/edit SYSTEM_SUPER_ADMIN role
+                        roles = roles.filter(r => r.role !== "SYSTEM_SUPER_ADMIN");
                     }
                 }
             }
@@ -241,13 +241,13 @@ export class RoleController {
             const hierarchies = await roleHierarchyRepository.findByParentRole(new Types.ObjectId(id));
             const roleObj: any = role;
             
-            if (role.role === "SUPER_ADMIN") {
+            if (role.role === "SYSTEM_SUPER_ADMIN") {
                 const allRoles = await this.roleService.getAllRoles();
                 roleObj.managedRoles = allRoles
                     .filter(r => r._id.toString() !== id.toString())
                     .map(r => ({
                         roleId: r,
-                        permissions: ["CREATE", "READ", "UPDATE", "DELETE"]
+                        permissions: ["role.assign", "role.create", "role.update", "role.delete"]
                     }));
             } else if (hierarchies && hierarchies.length > 0) {
                 roleObj.managedRoles = hierarchies.map((h: any) => ({
@@ -297,9 +297,9 @@ export class RoleController {
                 return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
             }
 
-            if (modifierRole.role !== "SUPER_ADMIN") {
+            if (modifierRole.role !== "SYSTEM_SUPER_ADMIN") {
                 const modifierPermissionsForRole = await getManagedRolePermissions(modifierRole, id);
-                if (!modifierPermissionsForRole.includes("UPDATE")) {
+                if (!modifierPermissionsForRole.includes("role.update") && !modifierPermissionsForRole.includes("role.assign")) {
                     return NextResponse.json(
                         { success: false, message: "You do not have permission to update this role" },
                         { status: 403 }
@@ -394,9 +394,9 @@ export class RoleController {
                 return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
             }
 
-            if (deleterRole.role !== "SUPER_ADMIN") {
+            if (deleterRole.role !== "SYSTEM_SUPER_ADMIN") {
                 const deleterPermissionsForRole = await getManagedRolePermissions(deleterRole, id);
-                if (!deleterPermissionsForRole.includes("DELETE")) {
+                if (!deleterPermissionsForRole.includes("role.delete")) {
                     return NextResponse.json(
                         { success: false, message: "You do not have permission to delete this role" },
                         { status: 403 }
@@ -405,9 +405,9 @@ export class RoleController {
             }
 
             const roleToDelete = await this.roleService.getRoleById(new Types.ObjectId(id));
-            if (roleToDelete?.role === "SUPER_ADMIN") {
+            if (roleToDelete?.role === "SYSTEM_SUPER_ADMIN") {
                 return NextResponse.json(
-                    { success: false, message: "SUPER_ADMIN role cannot be deleted" },
+                    { success: false, message: "SYSTEM_SUPER_ADMIN role cannot be deleted" },
                     { status: 403 }
                 );
             }

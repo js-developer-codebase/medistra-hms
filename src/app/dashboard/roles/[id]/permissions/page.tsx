@@ -4,46 +4,46 @@ import React, { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
-import { Shield, ArrowLeft, Loader2, Plus, X, Check, Save, Users } from "lucide-react";
+import { Shield, ArrowLeft, Loader2, Plus, X, Check, Save } from "lucide-react";
 import Link from "next/link";
 
-const PERMISSION_OPTIONS = ["CREATE", "READ", "UPDATE", "DELETE"] as const;
-const DEFAULT_MODULES = [
-  "Dashboard", "Patient Management", "Doctor Management", "Appointments",
-  "Admissions", "Ward Management", "Inventory", "Billing & Invoices", "Administration"
-];
+const VALID_PERMISSIONS: Record<string, string[]> = {
+  patient: ["patient.patient.view", "patient.patient.create", "patient.patient.update", "patient.patient.delete", "patient.patient.export"],
+  appointment: ["appointment.appointment.view", "appointment.appointment.create", "appointment.appointment.update", "appointment.appointment.cancel"],
+  admission: ["admission.admission.view", "admission.admission.create", "admission.admission.update", "admission.admission.transfer", "admission.admission.discharge"],
+  clinical: ["clinical.record.view", "clinical.record.create", "clinical.record.update", "clinical.record.sign", "clinical.diagnosis.view", "clinical.diagnosis.create", "clinical.diagnosis.update", "clinical.prescription.view", "clinical.prescription.create", "clinical.prescription.update", "clinical.prescription.cancel"],
+  nursing: ["nursing.vitals.view", "nursing.vitals.create", "nursing.vitals.update"],
+  lab: ["lab.order.view", "lab.order.create", "lab.sample.collect", "lab.result.create", "lab.result.update", "lab.result.verify", "lab.report.publish"],
+  radiology: ["radiology.order.view", "radiology.order.create", "radiology.study.perform", "radiology.report.create", "radiology.report.verify", "radiology.report.publish"],
+  pharmacy: ["pharmacy.prescription.view", "pharmacy.dispense.create", "pharmacy.dispense.cancel", "pharmacy.stock.view"],
+  billing: ["billing.invoice.view", "billing.invoice.create", "billing.invoice.update", "billing.invoice.cancel", "billing.payment.view", "billing.payment.create", "billing.refund.create"],
+  inventory: ["inventory.stock.view", "inventory.stock.receive", "inventory.stock.issue", "inventory.stock.transfer", "inventory.stock.adjust"],
+  procurement: ["procurement.request.create", "procurement.request.approve", "procurement.order.create", "procurement.order.approve"],
+  user: ["user.user.view", "user.user.create", "user.user.update", "user.user.disable"],
+  role: ["role.role.view", "role.role.create", "role.role.update", "role.role.delete", "role.role.assign"],
+  audit: ["audit.audit.view", "audit.audit.export"],
+  system: ["system.settings.view", "system.settings.update"]
+};
+
+const DEFAULT_MODULES = Object.keys(VALID_PERMISSIONS);
 
 interface ModuleAccess { moduleName: string; permissions: string[]; }
-interface ManagedRoleAccess { roleId: string; roleName?: string; permissions: string[]; }
-interface RoleData { _id: string; role: string; access: ModuleAccess[]; managedRoles?: any[]; }
-interface RoleInfo { _id: string; role: string; }
+interface RoleData { _id: string; role: string; access: ModuleAccess[]; }
 
 export default function RolePermissionsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { toast } = useToast();
   
-  // Unwrap params using React.use()
   const { id } = use(params);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<RoleData | null>(null);
   const [modules, setModules] = useState<ModuleAccess[]>([]);
-  const [customModule, setCustomModule] = useState("");
-
-  const [allRoles, setAllRoles] = useState<RoleInfo[]>([]);
-  const [managedRoles, setManagedRoles] = useState<ManagedRoleAccess[]>([]);
-
-  // Fetch all roles to populate role dropdown
-  const fetchAllRoles = useCallback(async () => {
-    try {
-      const res = await fetch("/api/role?managedOnly=true");
-      const json = await res.json();
-      if (json.success) setAllRoles(json.data);
-    } catch (err) { console.error(err); }
-  }, []);
+  
+  // State for dropdown selections
+  const [selectedPerms, setSelectedPerms] = useState<Record<number, string>>({});
 
   const fetchRole = useCallback(async () => {
     try {
@@ -52,106 +52,81 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
       if (json.success && json.data) {
         setRole(json.data);
         setModules(json.data.access || []);
-        
-        // Map managedRoles safely handling populated or unpopulated roleId
-        const mapped = (json.data.managedRoles || []).map((mr: any) => {
-          const roleIdStr = typeof mr.roleId === 'object' && mr.roleId !== null 
-            ? (mr.roleId._id?.toString() || mr.roleId.toString()) 
-            : (mr.roleId?.toString() || mr.role?.toString() || "");
-          const roleNameStr = typeof mr.roleId === 'object' && mr.roleId !== null 
-            ? mr.roleId.role 
-            : (mr.roleName || "");
-          return {
-            roleId: roleIdStr,
-            roleName: roleNameStr,
-            permissions: mr.permissions || []
-          };
-        });
-        setManagedRoles(mapped);
       } else {
-        toast("Failed to load role", "error");
+        toast({ title: "Error", description: "Failed to load role", variant: "destructive" });
         router.push("/dashboard/roles");
       }
     } catch {
-      toast("Error loading role", "error");
+      toast({ title: "Error", description: "Error loading role", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }, [id, router, toast]);
 
   useEffect(() => { 
-    Promise.all([fetchRole(), fetchAllRoles()]); 
-  }, [fetchRole, fetchAllRoles]);
-
-  // Update managed role names once allRoles are loaded
-  useEffect(() => {
-    if (allRoles.length > 0) {
-      setManagedRoles(prev => prev.map(mr => {
-        const found = allRoles.find(r => r._id.toString() === mr.roleId.toString());
-        return { ...mr, roleName: mr.roleName || (found ? found.role : mr.roleId) };
-      }));
-    }
-  }, [allRoles]);
+    fetchRole(); 
+  }, [fetchRole]);
 
   function addModule(name: string) {
-    if (!name.trim()) return;
-    if (modules.find(m => m.moduleName === name)) { toast("Module already added", "warning"); return; }
-    setModules(prev => [...prev, { moduleName: name, permissions: ["READ"] }]);
-    setCustomModule("");
+    if (modules.find(m => m.moduleName === name)) { 
+      toast({ title: "Warning", description: "Module already added" }); 
+      return; 
+    }
+    setModules(prev => [...prev, { moduleName: name, permissions: [] }]);
   }
 
   function removeModule(idx: number) {
     setModules(prev => prev.filter((_, i) => i !== idx));
   }
 
-  function togglePermission(idx: number, perm: string) {
+  function addPermission(idx: number, perm: string) {
+    if (!perm) return;
     setModules(prev => prev.map((m, i) => {
       if (i !== idx) return m;
       const perms = m.permissions ?? [];
-      const has = perms.includes(perm);
-      return { ...m, permissions: has ? perms.filter(p => p !== perm) : [...perms, perm] };
+      if (perms.includes(perm)) return m;
+      return { ...m, permissions: [...perms, perm] };
     }));
+    // Reset selection for this row
+    setSelectedPerms(prev => ({ ...prev, [idx]: "" }));
   }
 
-  function addManagedRole(roleId: string, roleName: string) {
-    if (managedRoles.find(m => m.roleId === roleId)) return;
-    setManagedRoles(prev => [...prev, { roleId, roleName, permissions: ["READ"] }]);
-  }
-
-  function removeManagedRole(idx: number) {
-    setManagedRoles(prev => prev.filter((_, i) => i !== idx));
-  }
-
-  function toggleManagedRolePermission(idx: number, perm: string) {
-    setManagedRoles(prev => prev.map((m, i) => {
+  function removePermission(idx: number, perm: string) {
+    setModules(prev => prev.map((m, i) => {
       if (i !== idx) return m;
-      const has = m.permissions.includes(perm);
-      return { ...m, permissions: has ? m.permissions.filter(p => p !== perm) : [...m.permissions, perm] };
+      const perms = m.permissions ?? [];
+      return { ...m, permissions: perms.filter(p => p !== perm) };
     }));
   }
 
   async function handleSave() {
     if (!role) return;
-    if (modules.length === 0) { toast("A role must have at least one module", "warning"); return; }
+    if (modules.length === 0) { 
+      toast({ title: "Warning", description: "A role must have at least one module" }); 
+      return; 
+    }
     setSaving(true);
     try {
-      const payload = { 
-        access: modules,
-        managedRoles: managedRoles.map(m => ({ roleId: m.roleId, permissions: m.permissions }))
-      };
+      const payload = { access: modules };
       const res = await fetch(`/api/role/${id}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (json.success) { toast("Permissions updated successfully", "success"); router.push("/dashboard/roles"); }
-      else toast(json.message || "Failed to update permissions", "error");
-    } catch { toast("An unexpected error occurred", "error"); } finally { setSaving(false); }
+      if (json.success) { 
+        toast({ title: "Success", description: "Permissions updated successfully" }); 
+        router.push("/dashboard/roles"); 
+      }
+      else toast({ title: "Error", description: json.message || "Failed to update permissions", variant: "destructive" });
+    } catch { 
+      toast({ title: "Error", description: "An unexpected error occurred", variant: "destructive" }); 
+    } finally { 
+      setSaving(false); 
+    }
   }
 
   const availableModules = DEFAULT_MODULES.filter(m => !modules.find(mod => mod.moduleName === m));
-  const availableRoles = allRoles.filter(r => r._id.toString() !== role?._id.toString() && !managedRoles.find(m => m.roleId.toString() === r._id.toString()));
-  const isSuperAdmin = role?.role === "SUPER_ADMIN";
+  const isSuperAdmin = role?.role === "SYSTEM_SUPER_ADMIN";
 
   if (loading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>;
@@ -160,7 +135,11 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/roles"><Button variant="ghost" size="sm" className="gap-2 text-slate-600 dark:text-slate-400"><ArrowLeft className="h-4 w-4" />Back</Button></Link>
+        <Link href="/dashboard/roles">
+          <Button variant="ghost" size="sm" className="gap-2 text-slate-600 dark:text-slate-400">
+            <ArrowLeft className="h-4 w-4" />Back
+          </Button>
+        </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Edit Role Permissions</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">Modify access permissions for <strong className="text-slate-900 dark:text-slate-200">{role?.role}</strong></p>
@@ -183,7 +162,7 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
         <CardContent className="p-6 space-y-6">
           {isSuperAdmin && (
              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4 text-amber-800 dark:text-amber-300 text-sm">
-                <strong>SUPER_ADMIN</strong> is a built-in role with full system access. Its permissions cannot be modified.
+                <strong>SYSTEM_SUPER_ADMIN</strong> is a built-in role with full system access. Its permissions cannot be modified.
              </div>
           )}
 
@@ -194,102 +173,62 @@ export default function RolePermissionsPage({ params }: { params: Promise<{ id: 
               {availableModules.map(m => (
                 <Button key={m} type="button" variant="outline" size="sm" className="gap-1 text-xs" onClick={() => addModule(m)}><Plus className="h-3 w-3" />{m}</Button>
               ))}
-              <div className="flex gap-2 ml-auto">
-                <Input placeholder="Custom module name..." value={customModule} onChange={(e) => setCustomModule(e.target.value)} className="h-8 text-xs w-48" />
-                <Button type="button" variant="outline" size="sm" onClick={() => addModule(customModule)} disabled={!customModule.trim()}><Plus className="h-3 w-3" /></Button>
-              </div>
             </div>
           )}
 
           {/* Module Permission Rows */}
           <div className="space-y-3">
-            {modules.map((mod, idx) => (
-              <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-900/30">
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-slate-800 dark:text-slate-200">{mod.moduleName}</p>
+            {modules.map((mod, idx) => {
+              const validPerms = VALID_PERMISSIONS[mod.moduleName] || [];
+              const availablePermsForModule = validPerms.filter(p => !(mod.permissions || []).includes(p));
+
+              return (
+                <div key={idx} className="flex flex-col sm:flex-row gap-4 rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-900/30">
+                  <div className="w-48 shrink-0 pt-1">
+                    <p className="text-base font-semibold text-slate-800 dark:text-slate-200">{mod.moduleName}</p>
+                    
+                    {!isSuperAdmin && (
+                      <div className="mt-2 flex gap-2">
+                         <select 
+                           className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                           value={selectedPerms[idx] || ""}
+                           onChange={(e) => setSelectedPerms({ ...selectedPerms, [idx]: e.target.value })}
+                         >
+                           <option value="" disabled>Select permission...</option>
+                           {availablePermsForModule.map(p => <option key={p} value={p}>{p}</option>)}
+                         </select>
+                         <Button type="button" size="sm" variant="outline" className="h-8 px-2" onClick={() => addPermission(idx, selectedPerms[idx])} disabled={!selectedPerms[idx]}>
+                            Add
+                         </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-2">
+                      {(mod.permissions ?? []).map(perm => (
+                        <div key={perm} className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium bg-emerald-50/50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800">
+                          {perm}
+                          {!isSuperAdmin && (
+                            <button type="button" onClick={() => removePermission(idx, perm)} className="text-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-300"><X className="h-3 w-3" /></button>
+                          )}
+                        </div>
+                      ))}
+                      {(mod.permissions ?? []).length === 0 && (
+                        <span className="text-xs text-slate-400 italic">No permissions added</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isSuperAdmin && (
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 shrink-0 ml-2" onClick={() => removeModule(idx)} title="Remove Module"><X className="h-4 w-4" /></Button>
+                  )}
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {PERMISSION_OPTIONS.map(perm => {
-                    const active = (mod.permissions ?? []).includes(perm);
-                    return (
-                      <button key={perm} type="button" onClick={() => !isSuperAdmin && togglePermission(idx, perm)} disabled={isSuperAdmin}
-                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all border ${
-                          active ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:text-emerald-400" : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-500"
-                        } ${isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""}`}>
-                        {active && <Check className="h-3.5 w-3.5" />}{perm}
-                      </button>
-                    );
-                  })}
-                </div>
-                {!isSuperAdmin && (
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 shrink-0 ml-2" onClick={() => removeModule(idx)} title="Remove Module"><X className="h-4 w-4" /></Button>
-                )}
-              </div>
-            ))}
+              );
+            })}
+            
             {modules.length === 0 && !isSuperAdmin && (
                <div className="text-center py-12 text-slate-400 text-sm border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">No modules added yet. Add a module to set permissions.</div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Role Hierarchy (Managed Roles) */}
-      <Card className="border-slate-200/80 dark:border-slate-800 shadow-xl">
-        <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"><Users className="h-5 w-5" /></div>
-              <div><CardTitle className="text-base">Role Hierarchy</CardTitle><CardDescription>Assign which roles this role can manage (Create/Read/Update/Delete)</CardDescription></div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          {isSuperAdmin && (
-             <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4 text-amber-800 dark:text-amber-300 text-sm">
-                <strong>SUPER_ADMIN</strong> automatically manages all roles in the system.
-             </div>
-          )}
-
-          {!isSuperAdmin && (
-            <div className="flex gap-2 flex-wrap items-center">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2">Add Managed Role:</span>
-              {availableRoles.length === 0 && allRoles.length > 1 && <span className="text-sm text-slate-500">All available roles added</span>}
-              {availableRoles.length === 0 && allRoles.length <= 1 && <span className="text-sm text-slate-500">No other roles available</span>}
-              {availableRoles.map(r => (
-                <Button key={r._id} type="button" variant="outline" size="sm" className="gap-1 text-xs" onClick={() => addManagedRole(r._id, r.role)}><Plus className="h-3 w-3" />{r.role}</Button>
-              ))}
-            </div>
-          )}
-
-            {/* Managed Role Permission Rows */}
-          <div className="space-y-3">
-            {managedRoles.map((mod, idx) => (
-              <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-900/30">
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                    {mod.roleName || allRoles.find(r => r._id.toString() === mod.roleId.toString())?.role || mod.roleId}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {PERMISSION_OPTIONS.map(perm => {
-                    const active = (mod.permissions ?? []).includes(perm);
-                    return (
-                      <button key={perm} type="button" onClick={() => !isSuperAdmin && toggleManagedRolePermission(idx, perm)} disabled={isSuperAdmin}
-                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all border ${
-                          active ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:text-emerald-400" : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-500"
-                        } ${isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""}`}>
-                        {active && <Check className="h-3.5 w-3.5" />}{perm}
-                      </button>
-                    );
-                  })}
-                </div>
-                {!isSuperAdmin && (
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 shrink-0 ml-2" onClick={() => removeManagedRole(idx)} title="Remove Managed Role"><X className="h-4 w-4" /></Button>
-                )}
-              </div>
-            ))}
-            {managedRoles.length === 0 && !isSuperAdmin && (
-               <div className="text-center py-12 text-slate-400 text-sm border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">No managed roles added yet.</div>
             )}
           </div>
         </CardContent>

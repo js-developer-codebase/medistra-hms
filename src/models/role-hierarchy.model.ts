@@ -15,8 +15,7 @@ const roleHierarchySchema = new Schema<IRoleHierarchy>(
         },
         permissions: {
             type: [String],
-            enum: ["CREATE", "READ", "UPDATE", "DELETE"],
-            default: ["READ"],
+            default: [],
         },
     },
     { timestamps: true }

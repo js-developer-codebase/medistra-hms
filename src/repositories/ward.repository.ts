@@ -9,19 +9,19 @@ export class WardRepository {
     }
 
     async findAll(): Promise<IWard[]> {
-        return await Ward.find().lean();
+        return await Ward.find().populate("organizationId").lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IWard | null> {
-        return await Ward.findById(id).lean();
+        return await Ward.findById(id).populate("organizationId").lean();
     }
 
     async findByWardCode(wardCode: string): Promise<IWard | null> {
-        return await Ward.findOne({ wardCode }).lean();
+        return await Ward.findOne({ wardCode }).populate("organizationId").lean();
     }
 
     async findByOrganizationId(organizationId: Types.ObjectId): Promise<IWard[]> {
-        return await Ward.find({ organizationId }).lean();
+        return await Ward.find({ organizationId }).populate("organizationId").lean();
     }
 
     async update(id: Types.ObjectId, data: UpdateWardDto): Promise<IWard | null> {

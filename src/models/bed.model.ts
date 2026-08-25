@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, model, Types } from "mongoose";
 import { IBed } from "@/interfaces/bed.interface"
 
 const bedSchema = new Schema<IBed>(
@@ -41,5 +41,5 @@ const bedSchema = new Schema<IBed>(
         }
     }, { timestamps: true })
 
-const Bed = model<IBed>('Bed', bedSchema);
+const Bed = mongoose.models.Bed || mongoose.model<IBed>('Bed', bedSchema);
 export default Bed;

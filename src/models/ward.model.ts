@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, model, Types } from "mongoose";
 import { IWard } from "@/interfaces/ward.interface";
 
 const wardSchema = new Schema<IWard>(
@@ -45,5 +45,5 @@ const wardSchema = new Schema<IWard>(
         }
     }, { timestamps: true })
 
-const Ward = model<IWard>('Ward', wardSchema);
+const Ward = mongoose.models.Ward || mongoose.model<IWard>('Ward', wardSchema);
 export default Ward;

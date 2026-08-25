@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose"
+import mongoose, { Schema, model, Types } from "mongoose"
 import { IRoom } from "@/interfaces/room.interface"
 
 const roomSchema = new Schema<IRoom>(
@@ -35,5 +35,5 @@ const roomSchema = new Schema<IRoom>(
         }
     }, { timestamps: true })
 
-const Room = model<IRoom>('Room', roomSchema);
+const Room = mongoose.models.Room || mongoose.model<IRoom>('Room', roomSchema);
 export default Room;
