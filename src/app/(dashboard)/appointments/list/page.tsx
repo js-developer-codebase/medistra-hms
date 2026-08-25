@@ -22,10 +22,10 @@ export default function AppointmentsListPage() {
             if (data.success) {
                 setAppointments(data.data);
             } else {
-                toast({ title: "Error", description: data.error, type: "error" });
+                toast({ title: "Error", description: data.error, variant: "error" });
             }
         } catch (error: any) {
-            toast({ title: "Error", description: error.message, type: "error" });
+            toast({ title: "Error", description: error.message, variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -45,13 +45,13 @@ export default function AppointmentsListPage() {
             const data = await res.json();
             
             if (data.success) {
-                toast({ title: "Success", description: "Appointment deleted successfully", type: "success" });
+                toast({ title: "Success", description: "Appointment deleted successfully", variant: "success" });
                 fetchAppointments();
             } else {
-                toast({ title: "Error", description: data.error, type: "error" });
+                toast({ title: "Error", description: data.error, variant: "error" });
             }
         } catch (error: any) {
-            toast({ title: "Error", description: error.message, type: "error" });
+            toast({ title: "Error", description: error.message, variant: "error" });
         }
     };
 
