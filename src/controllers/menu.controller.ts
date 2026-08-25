@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import defaultMenuService, { MenuService } from "@/services/menu.service";
+import { getServerSession } from "next-auth";
+import authOptions from "@/lib/auth";
+import Role from "@/models/role.model";
 
 export class MenuController {
     constructor(private service: MenuService = defaultMenuService) { }
@@ -36,10 +39,39 @@ export class MenuController {
         }
     }
 
-    async getMenus(): Promise<NextResponse> {
+    async getMenus(request?: NextRequest): Promise<NextResponse> {
         try {
             await dbConnect();
-            const menus = await this.service.getAllMenus();
+            let menus = await this.service.getAllMenus();
+
+            // Filter menus based on user role access
+            const session = await getServerSession(authOptions);
+            if (session && session.user) {
+                const currentUser: any = session.user;
+                if (currentUser.role) {
+                    const roleDoc = await Role.findById(currentUser.role);
+                    if (roleDoc && roleDoc.role !== "SUPER_ADMIN") {
+                        const accessibleModules = roleDoc.access?.map((a: any) => a.moduleName) || [];
+                        
+                        // Filter the top-level menus and their children
+                        menus = menus.map((menu: any) => {
+                            const menuObj = menu.toObject ? menu.toObject() : { ...menu };
+                            // If it has children, filter the children
+                            if (menuObj.children && menuObj.children.length > 0) {
+                                menuObj.children = menuObj.children.filter((child: any) => 
+                                    accessibleModules.includes(child.name) || accessibleModules.includes(menuObj.name)
+                                );
+                            }
+                            return menuObj;
+                        }).filter((menu: any) => {
+                            // Keep if they have direct access, OR if they have access to at least one of its children
+                            const hasDirectAccess = accessibleModules.includes(menu.name);
+                            const hasChildAccess = menu.children && menu.children.length > 0;
+                            return hasDirectAccess || hasChildAccess;
+                        });
+                    }
+                }
+            }
 
             return NextResponse.json(
                 {

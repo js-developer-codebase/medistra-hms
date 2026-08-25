@@ -3,6 +3,9 @@ import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
 import defaultUserService, { UserService } from "@/services/user.service";
 import { CreateUserDto, UpdateUserDto } from "@/dto/user.dto";
+import { getServerSession } from "next-auth/next";
+import authOptions from "@/lib/auth";
+import Role from "@/models/role.model";
 
 export class UserController {
     constructor(private userService: UserService = defaultUserService) { }
@@ -39,6 +42,52 @@ export class UserController {
                     { status: 400 }
                 );
             }
+
+            // --- Access Control Checks ---
+            const session = await getServerSession(authOptions);
+            if (!session || !session.user) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const currentUser: any = session.user;
+            let isGlobalAdmin = false;
+            let currentUserRole: any = null;
+
+            if (currentUser.role) {
+                currentUserRole = await Role.findById(currentUser.role);
+                if (currentUserRole && currentUserRole.role === "SUPER_ADMIN") {
+                    isGlobalAdmin = true;
+                }
+            }
+
+            if (!isGlobalAdmin) {
+                // 1. Organization Check
+                if (data.organization?.toString() !== currentUser.organization?.toString()) {
+                    return NextResponse.json({ success: false, message: "Cannot create user outside your organization" }, { status: 403 });
+                }
+
+                // 2. Branch Check
+                if (currentUser.branch) { // Current user is branch-level
+                    if (data.branch?.toString() !== currentUser.branch?.toString()) {
+                        return NextResponse.json({ success: false, message: "Cannot create user outside your branch" }, { status: 403 });
+                    }
+                }
+
+                // 3. Role Check
+                if (!currentUserRole) {
+                    return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+                }
+
+                const hasCreatePermission = currentUserRole.managedRoles?.some((mr: any) => {
+                    const mrId = (mr.roleId?._id || mr.roleId)?.toString();
+                    return mrId === data.role.toString() && mr.permissions.includes("CREATE");
+                });
+
+                if (!hasCreatePermission) {
+                    return NextResponse.json({ success: false, message: "You do not have permission to create a user with this role" }, { status: 403 });
+                }
+            }
+            // --- End Access Control Checks ---
 
             const user = await this.userService.createUser(data);
 
@@ -153,6 +202,64 @@ export class UserController {
                 );
             }
 
+            // --- Access Control Checks ---
+            const session = await getServerSession(authOptions);
+            if (!session || !session.user) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const currentUser: any = session.user;
+            let isGlobalAdmin = false;
+            let currentUserRole: any = null;
+
+            if (currentUser.role) {
+                currentUserRole = await Role.findById(currentUser.role);
+                if (currentUserRole && currentUserRole.role === "SUPER_ADMIN") {
+                    isGlobalAdmin = true;
+                }
+            }
+
+            if (!isGlobalAdmin) {
+                const targetUser = await this.userService.getUserById(new Types.ObjectId(id));
+                if (!targetUser) {
+                    return NextResponse.json({ success: false, message: "Target user not found" }, { status: 404 });
+                }
+
+                // 1. Organization Check
+                if (targetUser.organization?.toString() !== currentUser.organization?.toString()) {
+                    return NextResponse.json({ success: false, message: "Cannot update user outside your organization" }, { status: 403 });
+                }
+                if (data.organization && data.organization.toString() !== currentUser.organization?.toString()) {
+                     return NextResponse.json({ success: false, message: "Cannot move user outside your organization" }, { status: 403 });
+                }
+
+                // 2. Branch Check
+                if (currentUser.branch) { // Current user is branch-level
+                    if (targetUser.branch?.toString() !== currentUser.branch?.toString()) {
+                        return NextResponse.json({ success: false, message: "Cannot update user outside your branch" }, { status: 403 });
+                    }
+                    if (data.branch && data.branch.toString() !== currentUser.branch?.toString()) {
+                        return NextResponse.json({ success: false, message: "Cannot move user outside your branch" }, { status: 403 });
+                    }
+                }
+
+                // 3. Role Check
+                if (!currentUserRole) {
+                    return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+                }
+
+                const roleToCheck = data.role ? data.role : targetUser.role;
+                const hasUpdatePermission = currentUserRole.managedRoles?.some((mr: any) => {
+                    const mrId = (mr.roleId?._id || mr.roleId)?.toString();
+                    return mrId === roleToCheck.toString() && mr.permissions.includes("UPDATE");
+                });
+
+                if (!hasUpdatePermission) {
+                    return NextResponse.json({ success: false, message: "You do not have permission to update this user's role" }, { status: 403 });
+                }
+            }
+            // --- End Access Control Checks ---
+
             const user = await this.userService.updateUser(new Types.ObjectId(id), data);
 
             return NextResponse.json(
@@ -178,6 +285,57 @@ export class UserController {
                     { status: 400 }
                 );
             }
+
+            // --- Access Control Checks ---
+            const session = await getServerSession(authOptions);
+            if (!session || !session.user) {
+                return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+            }
+
+            const currentUser: any = session.user;
+            let isGlobalAdmin = false;
+            let currentUserRole: any = null;
+
+            if (currentUser.role) {
+                currentUserRole = await Role.findById(currentUser.role);
+                if (currentUserRole && currentUserRole.role === "SUPER_ADMIN") {
+                    isGlobalAdmin = true;
+                }
+            }
+
+            if (!isGlobalAdmin) {
+                const targetUser = await this.userService.getUserById(new Types.ObjectId(id));
+                if (!targetUser) {
+                    return NextResponse.json({ success: false, message: "Target user not found" }, { status: 404 });
+                }
+
+                // 1. Organization Check
+                if (targetUser.organization?.toString() !== currentUser.organization?.toString()) {
+                    return NextResponse.json({ success: false, message: "Cannot delete user outside your organization" }, { status: 403 });
+                }
+
+                // 2. Branch Check
+                if (currentUser.branch) { // Current user is branch-level
+                    if (targetUser.branch?.toString() !== currentUser.branch?.toString()) {
+                        return NextResponse.json({ success: false, message: "Cannot delete user outside your branch" }, { status: 403 });
+                    }
+                }
+
+                // 3. Role Check
+                if (!currentUserRole) {
+                    return NextResponse.json({ success: false, message: "Current user role not found" }, { status: 403 });
+                }
+
+                const hasDeletePermission = currentUserRole.managedRoles?.some((mr: any) => {
+                    const mrId = (mr.roleId?._id || mr.roleId)?.toString();
+                    return mrId === targetUser.role.toString() && mr.permissions.includes("DELETE");
+                });
+
+                if (!hasDeletePermission) {
+                    return NextResponse.json({ success: false, message: "You do not have permission to delete a user with this role" }, { status: 403 });
+                }
+            }
+            // --- End Access Control Checks ---
 
             await this.userService.deleteUser(new Types.ObjectId(id));
 
