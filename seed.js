@@ -118,6 +118,16 @@ const menusData = [
             { name: "Create Role", path: "/dashboard/roles/create", icon: "ShieldPlus" },
             { name: "Manage Roles", path: "/dashboard/roles", icon: "Shield" },
         ]
+    },
+    {
+        name: "Organization",
+        path: "/dashboard/organization",
+        icon: "Building2",
+        children: [
+            { name: "Create Organization", path: "/dashboard/organization/create", icon: "PlusCircle" },
+            { name: "Create Branch", path: "/dashboard/organization/branch/create", icon: "GitBranch" },
+            { name: "Manage Organization", path: "/dashboard/organization/manage", icon: "Settings" }
+        ]
     }
 ];
 
@@ -136,13 +146,13 @@ async function seedDatabase() {
         // 2. Insert Menus
         console.log("Seeding menus...");
         const createdMenus = [];
-        
+
         for (const menuGroup of menusData) {
             const { children, ...parentData } = menuGroup;
-            
+
             // Create parent
             const parentMenu = await Menu.create(parentData);
-            
+
             // Create children if any
             if (children && children.length > 0) {
                 const childIds = [];
@@ -150,12 +160,12 @@ async function seedDatabase() {
                     const childMenu = await Menu.create(child);
                     childIds.push(childMenu._id);
                 }
-                
+
                 // Update parent with children IDs
                 parentMenu.children = childIds;
                 await parentMenu.save();
             }
-            
+
             createdMenus.push(parentMenu);
         }
         console.log(`✅ Successfully seeded ${menusData.length} parent menus with their children.`);
@@ -179,7 +189,7 @@ async function seedDatabase() {
         const adminUser = await User.create({
             name: "Super Admin",
             email: DEFAULT_ADMIN_EMAIL,
-            password: hashedPassword, 
+            password: hashedPassword,
             gender: "MALE",
             role: adminRole._id,
             isActive: true
