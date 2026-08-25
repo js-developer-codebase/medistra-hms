@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import wardService, { WardService } from "@/services/ward.service";
+import defaultWardService, { WardService } from "@/services/ward.service";
 import { CreateWardDto, UpdateWardDto } from "@/dto/ward.dto";
 
 export class WardController {
-    constructor(private wardService: WardService = wardService) { }
+    constructor(private wardService: WardService = defaultWardService) { }
 
     async createWard(request: NextRequest): Promise<NextResponse> {
         try {

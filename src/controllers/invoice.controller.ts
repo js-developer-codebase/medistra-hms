@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import invoiceService, { InvoiceService } from "@/services/invoice.service";
+import defaultInvoiceService, { InvoiceService } from "@/services/invoice.service";
 import { CreateInvoiceDto, UpdateInvoiceDto } from "@/dto/invoice.dto";
 
 export class InvoiceController {
-    constructor(private invoiceService: InvoiceService = invoiceService) { }
+    constructor(private invoiceService: InvoiceService = defaultInvoiceService) { }
 
     async createInvoice(request: NextRequest): Promise<NextResponse> {
         try {

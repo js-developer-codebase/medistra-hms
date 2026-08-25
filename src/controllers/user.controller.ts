@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import userService, { UserService } from "@/services/user.service";
+import defaultUserService, { UserService } from "@/services/user.service";
 import { CreateUserDto, UpdateUserDto } from "@/dto/user.dto";
 
 export class UserController {
-    constructor(private userService: UserService = userService) { }
+    constructor(private userService: UserService = defaultUserService) { }
 
     async createUser(request: NextRequest): Promise<NextResponse> {
         try {

@@ -2,6 +2,7 @@ import userRepository, { UserRepository } from "@/repositories/user.repository";
 import { Types } from "mongoose";
 import { IUser } from "@/interfaces/user.interface";
 import { CreateUserDto, UpdateUserDto } from "@/dto/user.dto";
+import bcrypt from "bcryptjs";
 
 export class UserService {
     constructor(private repository: UserRepository = userRepository) { }
@@ -10,6 +11,9 @@ export class UserService {
         const existing = await this.repository.findByEmail(data.email);
         if (existing) {
             throw { statusCode: 409, message: `User with email '${data.email}' already exists` };
+        }
+        if (data.password) {
+            data.password = await bcrypt.hash(data.password, 10);
         }
         return await this.repository.create(data);
     }
@@ -40,6 +44,9 @@ export class UserService {
             if (existing && existing._id.toString() !== id.toString()) {
                 throw { statusCode: 409, message: `Email '${data.email}' is already in use` };
             }
+        }
+        if (data.password) {
+            data.password = await bcrypt.hash(data.password, 10);
         }
         return await this.repository.update(id, data);
     }

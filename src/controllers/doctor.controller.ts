@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import doctorService, { DoctorService } from "@/services/doctor.service";
+import defaultDoctorService, { DoctorService } from "@/services/doctor.service";
 import { CreateDoctorDto, UpdateDoctorDto } from "@/dto/doctor.dto";
 
 export class DoctorController {
-    constructor(private doctorService: DoctorService = doctorService) { }
+    constructor(private doctorService: DoctorService = defaultDoctorService) { }
 
     async createDoctor(request: NextRequest): Promise<NextResponse> {
         try {

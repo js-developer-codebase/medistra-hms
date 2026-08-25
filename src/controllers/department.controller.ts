@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import departmentService, { DepartmentService } from "@/services/department.service";
+import defaultDepartmentService, { DepartmentService } from "@/services/department.service";
 import { CreateDepartmentDto, UpdateDepartmentDto } from "@/dto/department.dto";
 
 export class DepartmentController {
-    constructor(private departmentService: DepartmentService = departmentService) { }
+    constructor(private departmentService: DepartmentService = defaultDepartmentService) { }
 
     async createDepartment(request: NextRequest): Promise<NextResponse> {
         try {

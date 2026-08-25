@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import inventoryService, { InventoryService } from "@/services/inventory.service";
+import defaultInventoryService, { InventoryService } from "@/services/inventory.service";
 import { CreateInventoryDto, UpdateInventoryDto } from "@/dto/inventory.dto";
 
 export class InventoryController {
-    constructor(private inventoryService: InventoryService = inventoryService) { }
+    constructor(private inventoryService: InventoryService = defaultInventoryService) { }
 
     async createInventory(request: NextRequest): Promise<NextResponse> {
         try {

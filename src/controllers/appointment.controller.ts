@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import appointmentService, { AppointmentService } from "@/services/appointment.service";
+import defaultAppointmentService, { AppointmentService } from "@/services/appointment.service";
 import { CreateAppointmentDto, UpdateAppointmentDto } from "@/dto/appointment.dto";
 
 export class AppointmentController {
-    constructor(private appointmentService: AppointmentService = appointmentService) { }
+    constructor(private appointmentService: AppointmentService = defaultAppointmentService) { }
 
     async createAppointment(request: NextRequest): Promise<NextResponse> {
         try {

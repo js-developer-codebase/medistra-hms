@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
-import admissionService, { AdmissionService } from "@/services/admission.service";
+import defaultAdmissionService, { AdmissionService } from "@/services/admission.service";
 import { CreateAdmissionDto, UpdateAdmissionDto } from "@/dto/admission.dto";
 
 export class AdmissionController {
-    constructor(private admissionService: AdmissionService = admissionService) { }
+    constructor(private admissionService: AdmissionService = defaultAdmissionService) { }
 
     async createAdmission(request: NextRequest): Promise<NextResponse> {
         try {
