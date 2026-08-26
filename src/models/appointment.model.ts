@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import { model, models, Schema, Types } from "mongoose";
 import { IAppointment } from "@/interfaces/appointment.interface";
 
 const appointmentSchema = new Schema<IAppointment>(
@@ -57,5 +57,5 @@ const appointmentSchema = new Schema<IAppointment>(
         }
     }, { timestamps: true });
 
-const Appointment = model<IAppointment>('Appointment', appointmentSchema);
+const Appointment = models.Appointment || model<IAppointment>('Appointment', appointmentSchema);
 export default Appointment;

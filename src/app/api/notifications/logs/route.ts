@@ -15,3 +15,18 @@ export async function GET() {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    await dbConnect();
+    const body = await req.json();
+    const newLog = await NotificationLog.create({
+      ...body,
+      status: "SENT",
+      sentAt: new Date()
+    });
+    return NextResponse.json({ success: true, data: newLog }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
