@@ -96,5 +96,3 @@ If you have run the seeder, you can log in with the default credentials:
 - **Email:** `admin@hospital.com`
 - **Password:** `password123`
 
----
-*Built autonomously by the Antigravity Agentic Team.*
