@@ -8,7 +8,7 @@ const accessSchema = new Schema({
 
 const managedRoleSchema = new Schema({
     roleId: { type: Schema.Types.ObjectId, ref: 'Role', required: true },
-    permissions: { type: [String], enum: ['CREATE', 'READ', 'UPDATE', 'DELETE'], default: [] }
+    permissions: { type: [String], default: [] }
 }, { _id: false });
 
 const roleSchema = new Schema<IRole>({

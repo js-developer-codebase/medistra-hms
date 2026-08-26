@@ -50,7 +50,7 @@ export class MenuController {
                 const currentUser: any = session.user;
                 if (currentUser.role) {
                     const roleDoc = await Role.findById(currentUser.role);
-                    if (roleDoc && roleDoc.role !== "SUPER_ADMIN") {
+                    if (roleDoc && roleDoc.role !== "SYSTEM_SUPER_ADMIN") {
                         const accessibleModules = roleDoc.access?.map((a: any) => a.moduleName) || [];
                         
                         // Filter the top-level menus and their children

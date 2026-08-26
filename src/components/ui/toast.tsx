@@ -13,7 +13,7 @@ interface Toast {
 }
 
 interface ToastContextValue {
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (messageOrObj: string | { title?: string; description?: string | any; variant?: string; message?: string }, variantStr?: ToastVariant) => void;
 }
 
 const ToastContext = React.createContext<ToastContextValue>({
@@ -58,7 +58,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 
   const addToast = React.useCallback(
-    (message: string, variant: ToastVariant = "success") => {
+    (messageOrObj: string | { title?: string; description?: string | any; variant?: string; message?: string }, variantStr?: ToastVariant) => {
+      let message = "";
+      let variant: ToastVariant = variantStr || "success";
+
+      if (typeof messageOrObj === "string") {
+        message = messageOrObj;
+      } else {
+        const title = messageOrObj.title || "";
+        const desc = typeof messageOrObj.description === "string" ? messageOrObj.description : "";
+        message = desc ? (title ? `${title} - ${desc}` : desc) : (title || messageOrObj.message || "");
+        
+        if (messageOrObj.variant === "destructive") variant = "error";
+        else if (messageOrObj.variant === "warning") variant = "warning";
+        else if (messageOrObj.variant === "default") variant = "info";
+        else if (messageOrObj.variant) variant = messageOrObj.variant as ToastVariant;
+      }
+
       const id = Math.random().toString(36).substring(2, 9);
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {

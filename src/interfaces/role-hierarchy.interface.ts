@@ -1,7 +1,7 @@
 import { Document, Types } from "mongoose";
 import { IRole } from "./role.interface";
 
-export type RolePermissionType = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
+export type RolePermissionType = string;
 
 export interface IRoleHierarchy extends Document {
     parentRole: Types.ObjectId | IRole;

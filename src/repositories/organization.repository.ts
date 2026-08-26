@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import Organization from "@/models/organization.mode";
+import Organization from "@/models/organization.model";
 import { IOrganization } from "@/interfaces/organization.interface";
 
 export class OrganizationRepository {

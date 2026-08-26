@@ -9,19 +9,19 @@ export class BedRepository {
     }
 
     async findAll(): Promise<IBed[]> {
-        return await Bed.find().lean();
+        return await Bed.find().populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IBed | null> {
-        return await Bed.findById(id).lean();
+        return await Bed.findById(id).populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
     }
 
     async findByBedNumber(bedNumber: string): Promise<IBed | null> {
-        return await Bed.findOne({ bedNumber }).lean();
+        return await Bed.findOne({ bedNumber }).populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
     }
 
     async findByRoomId(roomId: Types.ObjectId): Promise<IBed[]> {
-        return await Bed.find({ roomId }).lean();
+        return await Bed.find({ roomId }).populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
     }
 
     async update(id: Types.ObjectId, data: UpdateBedDto): Promise<IBed | null> {

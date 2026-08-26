@@ -76,9 +76,9 @@ export class RoleHierarchyController {
             // Security: Check if modifying user is SUPER_ADMIN or has permission to delegate
             if (session.user.role) {
                 const modifierRole = await Role.findById(session.user.role);
-                if (modifierRole && modifierRole.role !== "SUPER_ADMIN") {
+                if (modifierRole && modifierRole.role !== "SYSTEM_SUPER_ADMIN") {
                     const parentRolePermissions = await getManagedRolePermissions(modifierRole, parentRole);
-                    if (!parentRolePermissions.includes("UPDATE")) {
+                    if (!parentRolePermissions.includes("role.update") && !parentRolePermissions.includes("role.assign")) {
                         return NextResponse.json(
                             { success: false, message: "You do not have permission to update this role hierarchy" },
                             { status: 403 }
