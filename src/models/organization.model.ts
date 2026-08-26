@@ -46,4 +46,7 @@ const organizationSchema = new Schema<IOrganization>(
     }, { timestamps: true })
 
 const Organization = mongoose.models.Organization || mongoose.model<IOrganization>('Organization', organizationSchema);
+if (!mongoose.models.Branch) {
+    mongoose.model('Branch', organizationSchema);
+}
 export default Organization;
