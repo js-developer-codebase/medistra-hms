@@ -26,7 +26,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.svc.createItem(data);
+            const inventory = await this.svc.createInventory(data);
 
             return NextResponse.json(
                 { success: true, message: "Inventory item created successfully", data: inventory },
@@ -52,9 +52,9 @@ export class InventoryController {
 
             if (branchId) {
                 if (!Types.ObjectId.isValid(branchId)) return NextResponse.json({ success: false, message: "Invalid branch ID" }, { status: 400 });
-                inventories = await this.svc.getItems();
+                inventories = await this.svc.getInventoriesByBranchId(new Types.ObjectId(branchId));
             } else {
-                inventories = await this.svc.getItems();
+                inventories = await this.svc.getAllInventories();
             }
 
             return NextResponse.json(
@@ -80,7 +80,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.svc.getItemById(id);
+            const inventory = await this.svc.getInventoryById(new Types.ObjectId(id));
             if (!inventory) {
                 return NextResponse.json(
                     { success: false, message: "Inventory item not found" },
@@ -120,7 +120,7 @@ export class InventoryController {
                 );
             }
 
-            const inventory = await this.svc.updateItem(id, data);
+            const inventory = await this.svc.updateInventory(new Types.ObjectId(id), data);
 
             return NextResponse.json(
                 { success: true, message: "Inventory item updated successfully", data: inventory },
@@ -146,7 +146,7 @@ export class InventoryController {
                 );
             }
 
-            await this.svc.deleteItem(id);
+            await this.svc.deleteInventory(new Types.ObjectId(id));
 
             return NextResponse.json(
                 { success: true, message: "Inventory item deleted successfully" },

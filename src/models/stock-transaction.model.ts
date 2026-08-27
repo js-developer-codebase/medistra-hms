@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import { IStockTransaction } from "@/interfaces/stock-transaction.interface";
 
 const stockTransactionSchema = new Schema<IStockTransaction>({
@@ -11,4 +11,4 @@ const stockTransactionSchema = new Schema<IStockTransaction>({
     performedBy: { type: Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
-export default model<IStockTransaction>("StockTransaction", stockTransactionSchema);
+export default models.StockTransaction || model<IStockTransaction>("StockTransaction", stockTransactionSchema);

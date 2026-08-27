@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import { IInventoryItem } from "@/interfaces/inventory-item.interface";
 
 const inventoryItemSchema = new Schema<IInventoryItem>({
@@ -14,4 +14,4 @@ const inventoryItemSchema = new Schema<IInventoryItem>({
     branchId: { type: Schema.Types.ObjectId, ref: "Branch" }
 }, { timestamps: true });
 
-export default model<IInventoryItem>("InventoryItem", inventoryItemSchema);
+export default models.InventoryItem || model<IInventoryItem>("InventoryItem", inventoryItemSchema);

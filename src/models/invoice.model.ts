@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, models, Types } from "mongoose";
 import { IInvoice } from "@/interfaces/invoice.interface";
 
 const invoiceSchema = new Schema<IInvoice>({
@@ -43,4 +43,4 @@ const invoiceSchema = new Schema<IInvoice>({
     }
 }, { timestamps: true });
 
-export default model<IInvoice>("Invoice", invoiceSchema);
+export default models.Invoice || model<IInvoice>("Invoice", invoiceSchema);

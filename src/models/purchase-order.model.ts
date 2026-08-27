@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import { IPurchaseOrder } from "@/interfaces/purchase-order.interface";
 
 const purchaseOrderSchema = new Schema<IPurchaseOrder>({
@@ -18,4 +18,4 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>({
     createdBy: { type: Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
-export default model<IPurchaseOrder>("PurchaseOrder", purchaseOrderSchema);
+export default models.PurchaseOrder || model<IPurchaseOrder>("PurchaseOrder", purchaseOrderSchema);

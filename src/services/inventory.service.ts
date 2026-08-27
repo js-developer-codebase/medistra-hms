@@ -2,6 +2,9 @@ import InventoryItem from "@/models/inventory-item.model";
 import StockTransaction from "@/models/stock-transaction.model";
 import { IInventoryItem } from "@/interfaces/inventory-item.interface";
 import { IStockTransaction } from "@/interfaces/stock-transaction.interface";
+import { Types } from "mongoose";
+import inventoryRepository from "@/repositories/inventory.repository";
+import { CreateInventoryDto, UpdateInventoryDto } from "@/dto/inventory.dto";
 
 export class InventoryService {
     async getItems() {
@@ -58,6 +61,25 @@ export class InventoryService {
         } finally {
             session.endSession();
         }
+    }
+
+    async createInventory(data: CreateInventoryDto) {
+        return await inventoryRepository.create(data);
+    }
+    async getAllInventories() {
+        return await inventoryRepository.findAll();
+    }
+    async getInventoriesByBranchId(branchId: Types.ObjectId) {
+        return await inventoryRepository.findByBranchId(branchId);
+    }
+    async getInventoryById(id: Types.ObjectId) {
+        return await inventoryRepository.findById(id);
+    }
+    async updateInventory(id: Types.ObjectId, data: UpdateInventoryDto) {
+        return await inventoryRepository.update(id, data);
+    }
+    async deleteInventory(id: Types.ObjectId) {
+        return await inventoryRepository.delete(id);
     }
 }
 

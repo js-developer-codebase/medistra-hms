@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, models, Types } from "mongoose";
 import { IInventory } from "@/interfaces/inventory.interface"
 
 const inventorySchema = new Schema<IInventory>({
@@ -41,4 +41,4 @@ const inventorySchema = new Schema<IInventory>({
     }
 });
 
-export default model<IInventory>("Inventory", inventorySchema);
+export default models.Inventory || model<IInventory>("Inventory", inventorySchema);
