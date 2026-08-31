@@ -90,7 +90,7 @@ export default function DashboardPage() {
               Authenticated Session
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome back, <span className="text-emerald-400">{session?.user?.name || "Super Admin"}</span>!
+              Welcome back, <span className="text-emerald-400">{session?.user?.name || "Super Admin"}</span>
             </h1>
             <p className="mt-1 text-sm text-slate-300 max-w-xl">
               Medistra Hospital Management Dashboard. Here is the operational summary for today.
