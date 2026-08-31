@@ -54,6 +54,7 @@ function PatientDocumentsContent() {
   // Upload modal state
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newDoc, setNewDoc] = useState({
     title: "",
     category: "LAB_REPORT" as const,
@@ -106,37 +107,65 @@ function PatientDocumentsContent() {
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDoc.title.trim()) {
-      toast("Document title is required", "error");
+    if (!newDoc.title.trim() && !selectedFile) {
+      toast("Document title or file is required", "error");
       return;
     }
 
     setUploading(true);
     try {
-      const fileName = newDoc.fileName.trim() || `${newDoc.title.replace(/\s+/g, "_").toLowerCase()}.pdf`;
-      const fileUrl = newDoc.fileUrl.trim() || `https://storage.medistra.hospital/docs/${Date.now()}_${fileName}`;
+      if (selectedFile) {
+        // Multipart upload directly to Storage API
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("title", newDoc.title || selectedFile.name);
+        formData.append("category", newDoc.category);
+        formData.append("patientId", selectedPatientId);
+        formData.append("notes", newDoc.notes);
+        formData.append("folder", "patients");
 
-      const res = await fetch(`/api/patient/documents?patientId=${selectedPatientId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newDoc.title,
-          category: newDoc.category,
-          fileName,
-          fileUrl,
-          fileSize: "1.4 MB",
-          notes: newDoc.notes
-        })
-      });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast("Document uploaded successfully to patient vault", "success");
-        setUploadModalOpen(false);
-        setNewDoc({ title: "", category: "LAB_REPORT", fileName: "", fileUrl: "", notes: "" });
-        fetchPatientDocs();
+        const data = await res.json();
+        if (res.ok && data.success) {
+          toast("File uploaded successfully to storage bucket!", "success");
+          setUploadModalOpen(false);
+          setSelectedFile(null);
+          setNewDoc({ title: "", category: "LAB_REPORT", fileName: "", fileUrl: "", notes: "" });
+          fetchPatientDocs();
+        } else {
+          toast(data.message || "Failed to upload file", "error");
+        }
       } else {
-        toast(data.message || "Failed to upload document", "error");
+        // Link-based upload
+        const fileName = newDoc.fileName.trim() || `${newDoc.title.replace(/\s+/g, "_").toLowerCase()}.pdf`;
+        const fileUrl = newDoc.fileUrl.trim() || `https://storage.medistra.hospital/docs/${Date.now()}_${fileName}`;
+
+        const res = await fetch(`/api/patient/documents?patientId=${selectedPatientId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newDoc.title,
+            category: newDoc.category,
+            fileName,
+            fileUrl,
+            fileSize: "1.4 MB",
+            notes: newDoc.notes
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          toast("Document record attached to patient vault", "success");
+          setUploadModalOpen(false);
+          setNewDoc({ title: "", category: "LAB_REPORT", fileName: "", fileUrl: "", notes: "" });
+          fetchPatientDocs();
+        } else {
+          toast(data.message || "Failed to add document", "error");
+        }
       }
     } catch (err) {
       toast("An error occurred during upload", "error");
@@ -144,6 +173,7 @@ function PatientDocumentsContent() {
       setUploading(false);
     }
   };
+
 
   const handleDeleteDoc = async (documentId: string, title: string) => {
     if (!confirm(`Delete document "${title}"?`)) return;
@@ -385,6 +415,31 @@ function PatientDocumentsContent() {
           </DialogHeader>
 
           <form onSubmit={handleUploadSubmit} className="space-y-4 pt-2">
+            {/* File Picker */}
+            <div className="space-y-1.5">
+              <Label htmlFor="docFile">Select File to Upload (PDF, PNG, JPG, DOCX)</Label>
+              <Input
+                id="docFile"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.dcm"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                    if (!newDoc.title) {
+                      setNewDoc((prev) => ({ ...prev, title: file.name.replace(/\.[^/.]+$/, "") }));
+                    }
+                  }
+                }}
+                className="cursor-pointer file:cursor-pointer"
+              />
+              {selectedFile && (
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  ✓ Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB) — Will be uploaded to Cloud Storage Bucket
+                </div>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="docTitle">Document Title <span className="text-rose-500">*</span></Label>
               <Input
@@ -414,25 +469,17 @@ function PatientDocumentsContent() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="docFileName">File Name</Label>
-              <Input
-                id="docFileName"
-                value={newDoc.fileName}
-                onChange={(e) => setNewDoc({ ...newDoc, fileName: e.target.value })}
-                placeholder="e.g. lab_report_2026.pdf"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="docUrl">Storage URL / Resource Link</Label>
-              <Input
-                id="docUrl"
-                value={newDoc.fileUrl}
-                onChange={(e) => setNewDoc({ ...newDoc, fileUrl: e.target.value })}
-                placeholder="https://storage.hospital.com/reports/sample.pdf"
-              />
-            </div>
+            {!selectedFile && (
+              <div className="space-y-1.5">
+                <Label htmlFor="docUrl">Or Paste External Document URL (Optional)</Label>
+                <Input
+                  id="docUrl"
+                  value={newDoc.fileUrl}
+                  onChange={(e) => setNewDoc({ ...newDoc, fileUrl: e.target.value })}
+                  placeholder="https://storage.hospital.com/reports/sample.pdf"
+                />
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="docNotes">Clinical Notes or Description</Label>
@@ -450,10 +497,11 @@ function PatientDocumentsContent() {
                 Cancel
               </Button>
               <Button type="submit" disabled={uploading} className="bg-emerald-600 hover:bg-emerald-700">
-                {uploading ? "Saving..." : "Save to Vault"}
+                {uploading ? "Uploading to Bucket..." : "Upload & Save to Vault"}
               </Button>
             </DialogFooter>
           </form>
+
         </DialogContent>
       </Dialog>
     </div>
