@@ -6,7 +6,7 @@ import Role from "@/models/role.model";
 
 class DashboardRepository {
   async getTotalPatients(): Promise<number> {
-    return Patient.countDocuments();
+    return Patient.countDocuments({ isMerged: { $ne: true } });
   }
 
   async getTotalDoctors(): Promise<number> {
@@ -15,14 +15,26 @@ class DashboardRepository {
     return User.countDocuments({ role: { $in: doctorRoleIds }, isActive: true });
   }
 
+  async getTotalAppointments(): Promise<number> {
+    return Appointment.countDocuments();
+  }
+
   async getTodayAppointments(): Promise<number> {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const now = new Date();
     
+    // UTC day boundaries
+    const startOfUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const endOfUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    
+    // Local day boundaries
+    const startOfLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const earliest = startOfUtc < startOfLocal ? startOfUtc : startOfLocal;
+    const latest = endOfUtc > endOfLocal ? endOfUtc : endOfLocal;
+
     return Appointment.countDocuments({
-      appointmentDate: { $gte: startOfDay, $lte: endOfDay }
+      appointmentDate: { $gte: earliest, $lte: latest }
     });
   }
 
@@ -35,7 +47,7 @@ class DashboardRepository {
   }
 
   async getRecentPatients(limit: number = 5): Promise<any[]> {
-    return Patient.find()
+    return Patient.find({ isMerged: { $ne: true } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .select('name uhid createdAt');

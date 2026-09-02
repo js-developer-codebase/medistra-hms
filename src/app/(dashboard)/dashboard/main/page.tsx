@@ -50,11 +50,14 @@ export default function DashboardPage() {
     },
     {
       title: "Appointments",
-      value: liveData?.todayAppointments?.toString() || "0",
-      change: "Scheduled today",
+      value: (liveData?.totalAppointments ?? liveData?.todayAppointments ?? 0).toString(),
+      change: liveData?.todayAppointments && liveData.todayAppointments > 0
+        ? `${liveData.todayAppointments} scheduled today`
+        : "Total scheduled",
       icon: Calendar,
       color: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20",
     },
+
     {
       title: "Occupied Beds",
       value: liveData ? `${liveData.occupiedBeds} / ${liveData.totalBeds}` : "0 / 0",
@@ -81,29 +84,31 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              <ShieldCheck className="h-4 w-4" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-500/20 mb-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               Authenticated Session
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome back, <span className="text-emerald-400">{session?.user?.name || "Super Admin"}</span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Welcome back, <span className="text-emerald-600 dark:text-emerald-400">{session?.user?.name || "Super Admin"}</span>
             </h1>
-            <p className="mt-1 text-sm text-slate-300 max-w-xl">
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 max-w-xl">
               Medistra Hospital Management Dashboard. Here is the operational summary for today.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-lg shadow-emerald-600/30 gap-2">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm gap-2">
               <Activity className="h-4 w-4" />
               System Status: Active
             </Button>
           </div>
         </div>
       </div>
+
+
 
       {/* KPI Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

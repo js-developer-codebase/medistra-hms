@@ -9,11 +9,17 @@ export class DepartmentRepository {
     }
 
     async findAll(): Promise<IDepartment[]> {
-        return await Department.find().lean();
+        return await Department.find()
+            .populate("headOfDepartment", "name email phone avatar")
+            .populate("organizationId", "organizationName")
+            .lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IDepartment | null> {
-        return await Department.findById(id).lean();
+        return await Department.findById(id)
+            .populate("headOfDepartment", "name email phone avatar")
+            .populate("organizationId", "organizationName")
+            .lean();
     }
 
     async findByCode(code: string): Promise<IDepartment | null> {

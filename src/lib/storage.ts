@@ -110,7 +110,46 @@ class StorageService {
         const sizeBytes = fileBuffer.length;
         const fileSizeFormatted = this.formatBytes(sizeBytes);
 
-        // 1. Try Supabase Storage SDK
+        // 1. Try S3 SDK (Supabase S3 or AWS S3)
+        if (this.s3Client) {
+            try {
+                const command = new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: key,
+                    Body: fileBuffer,
+                    ContentType: contentType,
+                    ACL: "public-read"
+                });
+
+                await this.s3Client.send(command);
+
+                let fileUrl = "";
+                if (S3_ENDPOINT && S3_ENDPOINT.includes("supabase.co")) {
+                    const baseUrl = S3_ENDPOINT.replace(/\/storage\/v1\/s3\/?$/, "");
+                    fileUrl = `${baseUrl}/storage/v1/object/public/${S3_BUCKET}/${key}`;
+                } else if (SUPABASE_URL) {
+                    fileUrl = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/${S3_BUCKET}/${key}`;
+                } else if (S3_ENDPOINT) {
+                    fileUrl = `${S3_ENDPOINT}/${S3_BUCKET}/${key}`;
+                } else {
+                    fileUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                }
+
+                return {
+                    fileUrl,
+                    key,
+                    fileName: originalName,
+                    fileSize: fileSizeFormatted,
+                    contentType,
+                    storageProvider: "s3"
+                };
+            } catch (s3Err) {
+                console.error("S3 upload error:", s3Err);
+                throw s3Err;
+            }
+        }
+
+        // 2. Try Supabase Storage JS SDK
         if (this.supabaseClient) {
             try {
                 const { data, error } = await this.supabaseClient.storage
@@ -142,39 +181,6 @@ class StorageService {
             }
         }
 
-        // 2. Try S3 SDK
-        if (this.s3Client) {
-            try {
-                const command = new PutObjectCommand({
-                    Bucket: S3_BUCKET,
-                    Key: key,
-                    Body: fileBuffer,
-                    ContentType: contentType,
-                    ACL: "public-read"
-                });
-
-                await this.s3Client.send(command);
-
-                let fileUrl = "";
-                if (S3_ENDPOINT) {
-                    fileUrl = `${S3_ENDPOINT}/${S3_BUCKET}/${key}`;
-                } else {
-                    fileUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
-                }
-
-                return {
-                    fileUrl,
-                    key,
-                    fileName: originalName,
-                    fileSize: fileSizeFormatted,
-                    contentType,
-                    storageProvider: "s3"
-                };
-            } catch (s3Err) {
-                console.error("S3 upload error:", s3Err);
-                throw s3Err;
-            }
-        }
 
         // 3. Development Fallback (when storage keys not yet filled in env)
         console.warn("⚠️ No Supabase or S3 credentials found. Using fallback mock storage link.");

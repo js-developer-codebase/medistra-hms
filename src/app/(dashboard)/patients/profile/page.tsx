@@ -90,7 +90,7 @@ function PatientProfileContent() {
   const patient = dossier?.patient;
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div className="flex items-center gap-3">
           <Link href="/patients/list">
@@ -150,39 +150,39 @@ function PatientProfileContent() {
 
       {!loading && patient && (
         <>
-          <Card className="border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 text-white overflow-hidden shadow-lg">
+          <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="flex items-start sm:items-center gap-5">
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white text-2xl font-bold border-2 border-emerald-400/40 shadow-inner">
+                  <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white text-2xl font-bold shadow-md shadow-emerald-600/20">
                     {patient.name?.charAt(0)?.toUpperCase() || "P"}
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-2xl font-bold text-white tracking-tight">{patient.name}</h2>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{patient.name}</h2>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-500/30">
                         {patient.gender} • {patient.age} yrs
                       </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200/70 dark:border-rose-500/30">
                         Blood: {patient.bloodGroup || "Unknown"}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-mono">
-                      <span className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700">
-                        UHID: <strong className="text-emerald-400">{patient.uhid || "MED-PENDING"}</strong>
-                        <button onClick={copyUhid} title="Copy UHID" className="hover:text-white">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300 font-mono">
+                      <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+                        UHID: <strong className="text-emerald-600 dark:text-emerald-400">{patient.uhid || "MED-PENDING"}</strong>
+                        <button onClick={copyUhid} title="Copy UHID" className="hover:text-emerald-600 dark:hover:text-white">
                           <Copy className="h-3 w-3 ml-1" />
                         </button>
                       </span>
                       <span className="flex items-center gap-1">
-                        <Phone className="h-3 w-3 text-cyan-400" /> {patient.contact}
+                        <Phone className="h-3 w-3 text-cyan-600 dark:text-cyan-400" /> {patient.contact}
                       </span>
                       {patient.email && (
                         <span>• {patient.email}</span>
                       )}
-                      <span className="flex items-center gap-1 text-slate-400">
-                        <MapPin className="h-3 w-3 text-amber-400" /> {patient.branchId?.organizationName || "Headquarters"}
+                      <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                        <MapPin className="h-3 w-3 text-amber-500" /> {patient.branchId?.organizationName || "Headquarters"}
                       </span>
                     </div>
                   </div>
@@ -195,17 +195,17 @@ function PatientProfileContent() {
                     </Button>
                   </Link>
                   <Link href={`/admissions/new?patientId=${patient._id}`}>
-                    <Button size="sm" variant="outline" className="text-slate-100 border-slate-700 hover:bg-slate-800 gap-1.5">
+                    <Button size="sm" variant="outline" className="gap-1.5">
                       <Bed className="h-3.5 w-3.5" /> Admit
                     </Button>
                   </Link>
                   <Link href={`/patients/identification?id=${patient._id}`}>
-                    <Button size="sm" variant="outline" className="text-slate-100 border-slate-700 hover:bg-slate-800 gap-1.5">
+                    <Button size="sm" variant="outline" className="gap-1.5">
                       <QrCode className="h-3.5 w-3.5" /> ID Card
                     </Button>
                   </Link>
                   <Link href={`/patients/history?id=${patient._id}`}>
-                    <Button size="sm" variant="outline" className="text-slate-100 border-slate-700 hover:bg-slate-800 gap-1.5">
+                    <Button size="sm" variant="outline" className="gap-1.5">
                       <Clock className="h-3.5 w-3.5" /> Timeline
                     </Button>
                   </Link>
@@ -213,6 +213,7 @@ function PatientProfileContent() {
               </div>
             </CardContent>
           </Card>
+
 
           <div className="flex overflow-x-auto gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
             {[
@@ -231,11 +232,10 @@ function PatientProfileContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                    active
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${active
                       ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {tab.label}

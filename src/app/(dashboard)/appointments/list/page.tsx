@@ -37,13 +37,13 @@ export default function AppointmentsListPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this appointment?")) return;
-        
+
         try {
             const res = await fetch(`/api/appointments/${id}`, {
                 method: 'DELETE'
             });
             const data = await res.json();
-            
+
             if (data.success) {
                 toast({ title: "Success", description: "Appointment deleted successfully", variant: "success" });
                 fetchAppointments();
@@ -56,7 +56,7 @@ export default function AppointmentsListPage() {
     };
 
     const getStatusBadge = (status: string) => {
-        switch(status) {
+        switch (status) {
             case 'SCHEDULED': return <Badge variant="secondary">Scheduled</Badge>;
             case 'CONFIRMED': return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Confirmed</Badge>;
             case 'CHECKED_IN': return <Badge variant="default" className="bg-indigo-500 hover:bg-indigo-600">Checked In</Badge>;
@@ -114,7 +114,7 @@ export default function AppointmentsListPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="font-medium text-slate-700 dark:text-slate-300">
-                                                Dr. {apt.doctorId?.name || "Unknown"}
+                                                {apt.doctorId?.name || "Unknown"}
                                             </div>
                                         </TableCell>
                                         <TableCell>
