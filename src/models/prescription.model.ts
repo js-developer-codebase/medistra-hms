@@ -16,12 +16,12 @@ const prescriptionSchema = new Schema<IPrescription>(
         branchId: {
             type: Types.ObjectId,
             ref: 'Branch',
-            required: true
+            required: false
         },
         appointmentId: {
             type: Types.ObjectId,
             ref: 'Appointment',
-            required: true
+            required: false
         },
         visitDate: {
             type: Date,

@@ -11,8 +11,8 @@ export interface MedicationDto {
 export interface CreatePrescriptionDto {
     patientId: Types.ObjectId | string;
     doctorId: Types.ObjectId | string;
-    branchId: Types.ObjectId | string;
-    appointmentId: Types.ObjectId | string;
+    branchId?: Types.ObjectId | string;
+    appointmentId?: Types.ObjectId | string;
     visitDate: Date | string;
     symptoms?: string;
     diagnosis?: string;

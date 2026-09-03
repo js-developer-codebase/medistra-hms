@@ -12,16 +12,30 @@ export class PrescriptionController {
             await dbConnect();
             const data: CreatePrescriptionDto = await request.json();
 
-            if (!data.patientId || !data.doctorId || !data.branchId || !data.appointmentId || !data.visitDate || !data.medications) {
+            if (!data.patientId || !data.doctorId || !data.visitDate || !data.medications) {
                 return NextResponse.json(
-                    { success: false, message: "Required fields are missing" },
+                    { success: false, message: "Required fields: patientId, doctorId, visitDate, medications" },
                     { status: 400 }
                 );
             }
 
-            if (!Types.ObjectId.isValid(data.patientId) || !Types.ObjectId.isValid(data.doctorId) || !Types.ObjectId.isValid(data.branchId) || !Types.ObjectId.isValid(data.appointmentId)) {
+            if (!Types.ObjectId.isValid(data.patientId) || !Types.ObjectId.isValid(data.doctorId)) {
                 return NextResponse.json(
-                    { success: false, message: "Invalid ID format for patient, doctor, branch, or appointment" },
+                    { success: false, message: "Invalid ID format for patient or doctor" },
+                    { status: 400 }
+                );
+            }
+
+            if (data.branchId && !Types.ObjectId.isValid(data.branchId)) {
+                return NextResponse.json(
+                    { success: false, message: "Invalid branch ID format" },
+                    { status: 400 }
+                );
+            }
+
+            if (data.appointmentId && !Types.ObjectId.isValid(data.appointmentId)) {
+                return NextResponse.json(
+                    { success: false, message: "Invalid appointment ID format" },
                     { status: 400 }
                 );
             }

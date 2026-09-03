@@ -12,10 +12,10 @@ class DashboardService {
     
     const formattedRecent = recentPatientsData.map(p => ({
         name: p.name,
-        id: p.uhid || "P-NEW",
-        doctor: "Attending Physician", 
-        status: "Active", 
-        time: p.createdAt ? new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"
+        id: p.id || p.uhid || "P-NEW",
+        doctor: p.doctor || "Attending Physician", 
+        status: p.status || "Active", 
+        time: p.time || (p.createdAt ? new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now")
     }));
 
     return {
