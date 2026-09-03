@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   ShieldAlert
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function NursingHubPage() {
   return (
@@ -82,99 +83,6 @@ function NursingHubContent() {
     setRefreshing(true);
     loadData();
   };
-
-  const submodules = [
-    {
-      title: "Nursing Dashboard",
-      description: "Shift overview, ward census, and clinical action shortcuts",
-      href: "/nursing/dashboard",
-      icon: LayoutDashboard,
-      badge: "Overview",
-      badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-      accent: "border-l-blue-500 hover:border-blue-500"
-    },
-    {
-      title: "My Inpatients",
-      description: "Admitted ward patient roster with bed allocation & doctor notes",
-      href: "/nursing/patients",
-      icon: Users,
-      badge: `${stats?.totalInpatients || 0} Admitted`,
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      accent: "border-l-emerald-500 hover:border-emerald-500"
-    },
-    {
-      title: "Bedside Vital Signs",
-      description: "Rapid vital entry, abnormal range alerts, and physiological logs",
-      href: "/nursing/vitals",
-      icon: HeartPulse,
-      badge: "Live Monitor",
-      badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-      accent: "border-l-rose-500 hover:border-rose-500"
-    },
-    {
-      title: "Nursing Notes",
-      description: "DAR (Data, Action, Response) and SOAP bedside observation notes",
-      href: "/nursing/notes",
-      icon: FileText,
-      badge: "Clinical Progress",
-      badgeColor: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300",
-      accent: "border-l-cyan-500 hover:border-cyan-500"
-    },
-    {
-      title: "Nursing Care Plans",
-      description: "NANDA-style care plans, goals of care, and outcome evaluation",
-      href: "/nursing/plans",
-      icon: Crosshair,
-      badge: `${stats?.activeCarePlans || 0} Active`,
-      badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300",
-      accent: "border-l-teal-500 hover:border-teal-500"
-    },
-    {
-      title: "Medication Administration",
-      description: "eMAR medication schedule, bedside dose administration, and sign-offs",
-      href: "/nursing/medications",
-      icon: Pill,
-      badge: `${stats?.pendingMedications || 0} Due`,
-      badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
-      accent: "border-l-purple-500 hover:border-purple-500"
-    },
-    {
-      title: "Intake & Output Charting",
-      description: "24-hour fluid balance recording (Oral/IV fluids vs Urine/Drains)",
-      href: "/nursing/intake-output",
-      icon: Droplets,
-      badge: "Fluid Balance",
-      badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
-      accent: "border-l-sky-500 hover:border-sky-500"
-    },
-    {
-      title: "Bedside Nursing Tasks",
-      description: "Wound dressings, catheter care, IV line changes, and doctor orders",
-      href: "/nursing/tasks",
-      icon: ClipboardCheck,
-      badge: `${stats?.pendingTasks || 0} Pending`,
-      badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-      accent: "border-l-amber-500 hover:border-amber-500"
-    },
-    {
-      title: "Shift Handover (SBAR)",
-      description: "Structured Situation-Background-Assessment-Recommendation handoffs",
-      href: "/nursing/handover",
-      icon: ArrowLeftRight,
-      badge: `${stats?.recentHandovers || 0} Logs`,
-      badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300",
-      accent: "border-l-indigo-500 hover:border-indigo-500"
-    },
-    {
-      title: "Shift Management",
-      description: "Nurse duty roster, shift schedule (Morning, Evening, Night), and wards",
-      href: "/nursing/shifts",
-      icon: Calendar,
-      badge: `${stats?.activeShifts || 0} Shifts`,
-      badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-      accent: "border-l-slate-500 hover:border-slate-500"
-    }
-  ];
 
   if (loading) {
     return (
@@ -272,45 +180,12 @@ function NursingHubContent() {
         </div>
       </div>
 
-      {/* Submodule Launchpad Grid */}
-      <div>
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-          Nursing Workstations & Clinical Submodules
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-          {submodules.map((sub, idx) => {
-            const Icon = sub.icon;
-            return (
-              <Link key={idx} href={sub.href}>
-                <div
-                  className={`p-4 rounded-xl border bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border-l-4 ${sub.accent} flex flex-col justify-between h-full`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <Badge className={`text-[10px] ${sub.badgeColor}`}>
-                        {sub.badge}
-                      </Badge>
-                    </div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white">
-                      {sub.title}
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {sub.description}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    <span>Open Workstation</span>
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/nursing"
+        title="Nursing Workstations & Clinical Submodules"
+        subtitle="Inpatient ward care, bedside vitals monitoring, eMAR medication tracking, and shift coordination"
+      />
 
       {/* Currently Admitted Ward Inpatients Preview */}
       <Card className="border shadow-sm">

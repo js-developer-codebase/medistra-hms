@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function EmergencyOperationsHub() {
   const [stats, setStats] = useState<any>({
@@ -42,7 +43,6 @@ export default function EmergencyOperationsHub() {
   });
   const [recentCasualties, setRecentCasualties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const { toast } = useToast();
 
   const loadData = async () => {
@@ -71,107 +71,6 @@ export default function EmergencyOperationsHub() {
     const interval = setInterval(loadData, 20000); // 20s auto refresh
     return () => clearInterval(interval);
   }, []);
-
-  const handleSeed = async () => {
-    try {
-      setSeeding(true);
-      const res = await fetch("/api/emergency/seed", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast("Sample emergency and trauma cases seeded successfully!", "success");
-        loadData();
-      } else {
-        toast(data.message || "Failed to seed sample cases", "error");
-      }
-    } catch (err) {
-      toast("Error executing seeder", "error");
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const navCards = [
-    {
-      title: "Emergency Dashboard",
-      href: "/emergency/dashboard",
-      icon: Activity,
-      desc: "Door-to-doctor TAT, ESI case volumes, and ambulance arrival trends.",
-      color: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-50 dark:bg-blue-950/40"
-    },
-    {
-      title: "Casualty Registration",
-      href: "/emergency/registration",
-      icon: UserPlus,
-      desc: "Rapid casualty intake, ambulance arrivals, and Medicolegal (MLC) tagging.",
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-50 dark:bg-emerald-950/40"
-    },
-    {
-      title: "Clinical Triage (ESI)",
-      href: "/emergency/triage",
-      icon: HeartPulse,
-      desc: "5-level color-coded Manchester triage, vitals alerts, and ABCDE survey.",
-      color: "text-rose-600 dark:text-rose-400",
-      bg: "bg-rose-50 dark:bg-rose-950/40"
-    },
-    {
-      title: "Emergency Queue",
-      href: "/emergency/queue",
-      icon: ListOrdered,
-      desc: "Live ER tracking board sorted by severity, wait times, and bay status.",
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-50 dark:bg-amber-950/40"
-    },
-    {
-      title: "ER Consultation",
-      href: "/emergency/consultation",
-      icon: Stethoscope,
-      desc: "Physician examination, provisional diagnosis, and clinical disposition.",
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-50 dark:bg-purple-950/40"
-    },
-    {
-      title: "STAT Orders",
-      href: "/emergency/orders",
-      icon: Flame,
-      desc: "STAT requisition for emergency lab panels, portable X-Ray, and IV drugs.",
-      color: "text-orange-600 dark:text-orange-400",
-      bg: "bg-orange-50 dark:bg-orange-950/40"
-    },
-    {
-      title: "Trauma & Procedures",
-      href: "/emergency/treatment",
-      icon: Syringe,
-      desc: "Resuscitation logs (CPR, intubation, defibrillation, wound suturing).",
-      color: "text-teal-600 dark:text-teal-400",
-      bg: "bg-teal-50 dark:bg-teal-950/40"
-    },
-    {
-      title: "Inpatient Admission",
-      href: "/emergency/admission",
-      icon: Building2,
-      desc: "Direct escalation and handover to ICU, CCU, Emergency OT, or Wards.",
-      color: "text-indigo-600 dark:text-indigo-400",
-      bg: "bg-indigo-50 dark:bg-indigo-950/40"
-    },
-    {
-      title: "Discharge & Disposition",
-      href: "/emergency/discharge",
-      icon: LogOut,
-      desc: "Discharge home, LAMA/DAMA, transfer to tertiary trauma center, BID.",
-      color: "text-slate-600 dark:text-slate-400",
-      bg: "bg-slate-50 dark:bg-slate-800/40"
-    },
-    {
-      title: "Emergency & MLC Reports",
-      href: "/emergency/reports",
-      icon: BarChart3,
-      desc: "Door-to-triage TAT, police MLC registry, and ER mortality audit logs.",
-      color: "text-cyan-600 dark:text-cyan-400",
-      bg: "bg-cyan-50 dark:bg-cyan-950/40"
-    }
-  ];
 
   const renderPriorityBadge = (priority?: string) => {
     switch (priority) {
@@ -243,16 +142,6 @@ export default function EmergencyOperationsHub() {
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={handleSeed}
-            disabled={seeding}
-            className="text-xs flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {seeding ? "Seeding..." : "Seed Sample ER Cases"}
           </Button>
         </div>
       </div>
@@ -350,43 +239,12 @@ export default function EmergencyOperationsHub() {
         </Card>
       </div>
 
-      {/* 10 Submodule Launchpad Cards */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>Emergency Department Submodules</span>
-            <Badge variant="outline" className="text-xs">10 Workstations</Badge>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {navCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link key={card.href} href={card.href} className="group">
-                <Card className="h-full border hover:border-rose-500/50 hover:shadow-md transition-all duration-200 bg-white dark:bg-slate-900 flex flex-col justify-between">
-                  <CardHeader className="p-3.5 pb-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className={`p-2 rounded-lg ${card.bg}`}>
-                        <Icon className={`h-4 w-4 ${card.color}`} />
-                      </div>
-                      <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-rose-600 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                    <CardTitle className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">
-                      {card.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3.5 pt-0">
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                      {card.desc}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Emergency Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/emergency"
+        title="Emergency Department Submodules"
+        subtitle="Direct access to triage, queue, casualty intake, and emergency clinical operations"
+      />
 
       {/* Active Casualty Stream & Bay Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -409,7 +267,7 @@ export default function EmergencyOperationsHub() {
             <CardContent className="p-0 divide-y">
               {recentCasualties.length === 0 ? (
                 <div className="p-8 text-center text-xs text-slate-400">
-                  No active emergency cases. Click &quot;Seed Sample ER Cases&quot; to test.
+                  No active emergency cases currently registered in ER.
                 </div>
               ) : (
                 recentCasualties.map((c) => (

@@ -153,37 +153,6 @@ function TestCatalogContent() {
     }
   };
 
-  // Pre-seed standard hospital panels if catalog is empty
-  const handleSeedDefaults = async () => {
-    setSubmitting(true);
-    const standardTests = [
-      { name: "Complete Blood Count (CBC)", code: "CBC-01", category: "Hematology", price: 350, normalRange: "Hb: 13.5-17.5 g/dL, WBC: 4-11k", turnaroundTime: "2 Hours" },
-      { name: "Liver Function Test (LFT)", code: "LFT-01", category: "Biochemistry", price: 650, normalRange: "Bilirubin: 0.2-1.2 mg/dL, SGPT: 7-56 U/L", turnaroundTime: "4 Hours" },
-      { name: "Kidney Function Test (KFT)", code: "KFT-01", category: "Biochemistry", price: 600, normalRange: "Creatinine: 0.7-1.3 mg/dL, Urea: 15-45 mg/dL", turnaroundTime: "4 Hours" },
-      { name: "Lipid Profile Panel", code: "LIP-01", category: "Biochemistry", price: 750, normalRange: "Total Chol: <200 mg/dL, TG: <150 mg/dL", turnaroundTime: "4 Hours" },
-      { name: "Fasting Blood Glucose", code: "GLU-F", category: "Biochemistry", price: 120, normalRange: "70 - 100 mg/dL", turnaroundTime: "1 Hour" },
-      { name: "HbA1c Glycated Hemoglobin", code: "HBA1C", category: "Biochemistry", price: 500, normalRange: "< 5.7 %", turnaroundTime: "2 Hours" },
-      { name: "Urine Routine & Microscopic", code: "UR-01", category: "Microbiology", price: 200, normalRange: "Clear, pH 5.5-7.0, Protein Nil", turnaroundTime: "1 Hour" },
-      { name: "Thyroid Profile (T3, T4, TSH)", code: "THY-01", category: "Serology", price: 850, normalRange: "TSH: 0.4 - 4.0 uIU/mL", turnaroundTime: "6 Hours" }
-    ];
-
-    try {
-      for (const t of standardTests) {
-        await fetch("/api/lab/tests", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(t)
-        });
-      }
-      toast("Standard diagnostic panels populated successfully!", "success");
-      fetchTests();
-    } catch (e) {
-      toast("Error populating standard tests", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const filteredTests = useMemo(() => {
     return tests.filter((t) => {
       const q = search.toLowerCase().trim();
@@ -288,19 +257,6 @@ function TestCatalogContent() {
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
-
-          {tests.length === 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSeedDefaults}
-              disabled={submitting}
-              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-            >
-              <Sparkles className="h-4 w-4 mr-1.5" />
-              Populate Standard Tests
-            </Button>
-          )}
 
           <Button
             size="sm"

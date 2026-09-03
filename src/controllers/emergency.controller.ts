@@ -263,17 +263,6 @@ export class EmergencyController {
       return NextResponse.json({ success: false, message: e.message }, { status: 500 });
     }
   }
-
-  // Sample Seeder
-  async seed(request: NextRequest): Promise<NextResponse> {
-    try {
-      await dbConnect();
-      const result = await emergencyService.seedEmergencySampleCases();
-      return NextResponse.json(result);
-    } catch (e: any) {
-      return NextResponse.json({ success: false, message: e.message }, { status: 500 });
-    }
-  }
 }
 
 export const emergencyController = new EmergencyController();

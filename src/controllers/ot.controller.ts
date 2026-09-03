@@ -240,17 +240,6 @@ export class OTController {
       return NextResponse.json({ success: false, message: e.message }, { status: 500 });
     }
   }
-
-  // Seeder
-  async seed(request: NextRequest): Promise<NextResponse> {
-    try {
-      await dbConnect();
-      const result = await otService.seedOTSampleCases();
-      return NextResponse.json(result);
-    } catch (e: any) {
-      return NextResponse.json({ success: false, message: e.message }, { status: 500 });
-    }
-  }
 }
 
 export const otController = new OTController();

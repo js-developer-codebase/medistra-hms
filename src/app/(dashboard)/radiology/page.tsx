@@ -26,6 +26,7 @@ import {
   Zap,
   Plus
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function RadiologyHubPage() {
   return (
@@ -80,99 +81,6 @@ function RadiologyHubContent() {
     setRefreshing(true);
     loadData();
   };
-
-  const submodules = [
-    {
-      title: "Radiology Dashboard",
-      description: "Modality throughput, turnaround time (TAT), and urgent imaging queue",
-      href: "/radiology/dashboard",
-      icon: LayoutDashboard,
-      badge: "Analytics",
-      badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-      accent: "border-l-blue-500 hover:border-blue-500"
-    },
-    {
-      title: "Imaging Catalog",
-      description: "CPT directory of X-Ray, CT, MRI, and USG procedures with prices in ₹",
-      href: "/radiology/catalog",
-      icon: BookOpen,
-      badge: `${stats?.totalProcedures || 0} Procedures`,
-      badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
-      accent: "border-l-purple-500 hover:border-purple-500"
-    },
-    {
-      title: "Imaging Orders",
-      description: "Physician imaging requisition book, priority triage, and contrast checks",
-      href: "/radiology/orders",
-      icon: ClipboardList,
-      badge: `${stats?.totalOrders || 0} Orders`,
-      badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-      accent: "border-l-slate-500 hover:border-slate-500"
-    },
-    {
-      title: "Worklist",
-      description: "DICOM Modality Worklist (MWL) for scan technicians by scanner room",
-      href: "/radiology/worklist",
-      icon: ListOrdered,
-      badge: `${stats?.pendingOrders || 0} Pending`,
-      badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-      accent: "border-l-amber-500 hover:border-amber-500"
-    },
-    {
-      title: "Study Management",
-      description: "Acquisition tracking, contrast dosage, series/slice counts, and check-in",
-      href: "/radiology/studies",
-      icon: Layers,
-      badge: `${stats?.inProgressStudies || 0} Studies`,
-      badgeColor: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300",
-      accent: "border-l-cyan-500 hover:border-cyan-500"
-    },
-    {
-      title: "Image Studies",
-      description: "PACS Light diagnostic viewer with windowing presets, zoom, pan, and invert",
-      href: "/radiology/images",
-      icon: Images,
-      badge: "PACS Viewer",
-      badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300",
-      accent: "border-l-indigo-500 hover:border-indigo-500"
-    },
-    {
-      title: "Report Entry",
-      description: "Radiologist structured dictation with normal organ findings and impressions",
-      href: "/radiology/reports",
-      icon: FileEdit,
-      badge: `${stats?.awaitingReporting || 0} Awaiting`,
-      badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300",
-      accent: "border-l-teal-500 hover:border-teal-500"
-    },
-    {
-      title: "Report Verification",
-      description: "Consultant Radiologist peer review, critical alert escalation, and sign-off",
-      href: "/radiology/verify",
-      icon: ShieldCheck,
-      badge: "Verification",
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      accent: "border-l-emerald-500 hover:border-emerald-500"
-    },
-    {
-      title: "Imaging Reports",
-      description: "Certified diagnostic report sheets with scan strip and printable layout",
-      href: "/radiology/imaging-reports",
-      icon: FileText,
-      badge: `${stats?.finalizedReports || 0} Certified`,
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      accent: "border-l-emerald-500 hover:border-emerald-500"
-    },
-    {
-      title: "Imaging History",
-      description: "Longitudinal PACS imaging archive, prior study comparison, and TAT metrics",
-      href: "/radiology/history",
-      icon: History,
-      badge: "PACS Archive",
-      badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-      accent: "border-l-slate-500 hover:border-slate-500"
-    }
-  ];
 
   if (loading) {
     return (
@@ -270,45 +178,12 @@ function RadiologyHubContent() {
         </div>
       </div>
 
-      {/* Submodule Launchpad Grid */}
-      <div>
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-          Radiology Workstations & Diagnostic Workflow
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-          {submodules.map((sub, idx) => {
-            const Icon = sub.icon;
-            return (
-              <Link key={idx} href={sub.href}>
-                <div
-                  className={`p-4 rounded-xl border bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border-l-4 ${sub.accent} flex flex-col justify-between h-full`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <Badge className={`text-[10px] ${sub.badgeColor}`}>
-                        {sub.badge}
-                      </Badge>
-                    </div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white">
-                      {sub.title}
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {sub.description}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    <span>Open Desk</span>
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/radiology"
+        title="Radiology Workstations & Diagnostic Workflow"
+        subtitle="Modality worklists, PACS scan inspection, structured radiologist reporting, and certified releases"
+      />
 
       {/* Recent Imaging Requisitions Table */}
       <Card className="border shadow-sm">

@@ -65,34 +65,6 @@ export class DepartmentController {
             
             let departments = await this.departmentService.getAllDepartments();
 
-            // Auto-seed initial departments if completely empty
-            if (departments.length === 0) {
-                let org = await Organization.findOne();
-                if (!org) {
-                    org = await Organization.create({
-                        organizationName: "Medistra Central Hospital",
-                        organizationId: "ORG-001",
-                        organizationType: "HOSPITAL",
-                        branchType: "MAIN",
-                        isActive: true
-                    });
-                }
-
-                const initialDepts = [
-                    { name: "CARDIOLOGY", code: "CARD", organizationId: org._id, location: "Block A - 2nd Floor", phoneExtension: "1021", description: "Comprehensive heart, vascular, and cardiac care" },
-                    { name: "NEUROLOGY", code: "NEURO", organizationId: org._id, location: "Block B - 3rd Floor", phoneExtension: "1032", description: "Brain, stroke, spine, and nervous system disorders" },
-                    { name: "ORTHOPEDICS", code: "ORTHO", organizationId: org._id, location: "Block A - 1st Floor", phoneExtension: "1014", description: "Bones, joints, sports medicine, and trauma center" },
-                    { name: "PEDIATRICS", code: "PED", organizationId: org._id, location: "Block C - 2nd Floor", phoneExtension: "1025", description: "Infant, child healthcare, and neonatal monitoring" },
-                    { name: "EMERGENCY", code: "EMERG", organizationId: org._id, location: "Ground Floor - Gate 1", phoneExtension: "1000", description: "24/7 Trauma, acute resuscitation, and ambulance bay" },
-                    { name: "DERMATOLOGY", code: "DERM", organizationId: org._id, location: "Block B - 1st Floor", phoneExtension: "1018", description: "Skin, cosmetic dermatology, and phototherapy" },
-                    { name: "OPHTHALMOLOGY", code: "OPHTH", organizationId: org._id, location: "Block B - 2nd Floor", phoneExtension: "1023", description: "Eye clinic, laser surgery, and vision diagnostics" },
-                    { name: "GYNECOLOGY", code: "GYN", organizationId: org._id, location: "Block C - 3rd Floor", phoneExtension: "1035", description: "Women's health, labor room, and obstetrics" },
-                    { name: "INTERNAL_MEDICINE", code: "MED", organizationId: org._id, location: "Block A - 3rd Floor", phoneExtension: "1030", description: "General adult medicine, diabetes, and infectious disease" },
-                ];
-                await Department.insertMany(initialDepts);
-                departments = await this.departmentService.getAllDepartments();
-            }
-
             if (organizationId && Types.ObjectId.isValid(organizationId)) {
                 departments = departments.filter((d: any) =>
                     d.organizationId && (d.organizationId._id?.toString() === organizationId || d.organizationId.toString() === organizationId)

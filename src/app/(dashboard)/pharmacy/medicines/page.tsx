@@ -206,19 +206,6 @@ export default function MedicinesPage() {
     }
   };
 
-  const handleSeed = async () => {
-    try {
-      const res = await fetch("/api/pharmacy/seed", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast("Essential medicines populated!", "success");
-        fetchMedicines();
-      }
-    } catch (err) {
-      toast("Error seeding medicines", "error");
-    }
-  };
-
   const handleExportCSV = () => {
     const headers = [
       "Name",
@@ -281,16 +268,6 @@ export default function MedicinesPage() {
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSeed}
-            className="text-xs flex items-center gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Seed Essential Drugs
           </Button>
 
           <Button

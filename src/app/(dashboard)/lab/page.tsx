@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Plus
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function LaboratoryHubPage() {
   return (
@@ -83,108 +84,6 @@ function LaboratoryHubContent() {
     setRefreshing(true);
     loadData();
   };
-
-  const submodules = [
-    {
-      title: "Laboratory Dashboard",
-      description: "Shift analytics, turnaround times, and diagnostic stage overview",
-      href: "/lab/dashboard",
-      icon: LayoutDashboard,
-      badge: "Analytics",
-      badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-      accent: "border-l-blue-500 hover:border-blue-500"
-    },
-    {
-      title: "Test Catalog",
-      description: "Diagnostic directory with CPT codes, reference ranges, and pricing",
-      href: "/lab/catalog",
-      icon: BookOpen,
-      badge: `${stats?.totalCatalogTests || 0} Tests`,
-      badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
-      accent: "border-l-purple-500 hover:border-purple-500"
-    },
-    {
-      title: "Lab Orders",
-      description: "Central diagnostic requisition book and multi-test ordering",
-      href: "/lab/orders",
-      icon: ClipboardList,
-      badge: `${stats?.totalOrders || 0} Total`,
-      badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-      accent: "border-l-slate-500 hover:border-slate-500"
-    },
-    {
-      title: "Pending Orders",
-      description: "Requisitions awaiting sample draw with urgent & STAT priority",
-      href: "/lab/pending",
-      icon: Clock,
-      badge: `${stats?.pendingOrders || 0} Pending`,
-      badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-      accent: "border-l-amber-500 hover:border-amber-500"
-    },
-    {
-      title: "Sample Collection",
-      description: "Phlebotomy desk, barcode labeling, tube assignment, and accessioning",
-      href: "/lab/collection",
-      icon: TestTube2,
-      badge: `${stats?.samplesCollected || 0} Collected`,
-      badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-      accent: "border-l-rose-500 hover:border-rose-500"
-    },
-    {
-      title: "Sample Processing",
-      description: "Bench receipt, centrifugation, sample quality checks, and analyzers",
-      href: "/lab/processing",
-      icon: Cpu,
-      badge: `${stats?.processing || 0} In Lab`,
-      badgeColor: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300",
-      accent: "border-l-cyan-500 hover:border-cyan-500"
-    },
-    {
-      title: "Lab Worklist",
-      description: "Technician bench batch worklist by department and equipment",
-      href: "/lab/worklist",
-      icon: ListOrdered,
-      badge: "Batch Queue",
-      badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300",
-      accent: "border-l-indigo-500 hover:border-indigo-500"
-    },
-    {
-      title: "Result Entry",
-      description: "Quantitative & qualitative entry with reference range delta checks",
-      href: "/lab/results",
-      icon: FileCheck2,
-      badge: "Result Entry",
-      badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300",
-      accent: "border-l-teal-500 hover:border-teal-500"
-    },
-    {
-      title: "Result Verification",
-      description: "Pathologist sign-off desk, critical value alerts, and approval",
-      href: "/lab/verify",
-      icon: ShieldCheck,
-      badge: "Approval",
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      accent: "border-l-emerald-500 hover:border-emerald-500"
-    },
-    {
-      title: "Lab Reports",
-      description: "Certified diagnostic report sheets with printable headers and PDFs",
-      href: "/lab/reports",
-      icon: FileText,
-      badge: `${stats?.completed || 0} Ready`,
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      accent: "border-l-emerald-500 hover:border-emerald-500"
-    },
-    {
-      title: "Lab History",
-      description: "Lifetime patient diagnostic archive, trend analysis, and audit log",
-      href: "/lab/history",
-      icon: History,
-      badge: "Archive",
-      badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-      accent: "border-l-slate-500 hover:border-slate-500"
-    }
-  ];
 
   if (loading) {
     return (
@@ -282,45 +181,12 @@ function LaboratoryHubContent() {
         </div>
       </div>
 
-      {/* Submodule Launchpad Grid */}
-      <div>
-        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-          Laboratory Workstations & Diagnostic Workflow
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {submodules.map((sub, idx) => {
-            const Icon = sub.icon;
-            return (
-              <Link key={idx} href={sub.href}>
-                <div
-                  className={`p-4 rounded-xl border bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border-l-4 ${sub.accent} flex flex-col justify-between h-full`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <Badge className={`text-[10px] ${sub.badgeColor}`}>
-                        {sub.badge}
-                      </Badge>
-                    </div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white">
-                      {sub.title}
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {sub.description}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                    <span>Open Workstation</span>
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/lab"
+        title="Laboratory Workstations & Diagnostic Workflow"
+        subtitle="Sample collection, laboratory worklist, test result entry, verification, and pathology reports"
+      />
 
       {/* Recent Laboratory Orders Feed */}
       <Card className="border shadow-sm">

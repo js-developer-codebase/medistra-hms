@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function AdmissionsOverviewPage() {
   const router = useRouter();
@@ -108,60 +109,6 @@ export default function AdmissionsOverviewPage() {
         return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300";
     }
   };
-
-  const submenus = [
-    {
-      title: "New Admission",
-      description: "Admit a new patient to an available bed",
-      icon: UserPlus,
-      href: "/admissions/new",
-      color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-    },
-    {
-      title: "Current Admissions",
-      description: "Manage currently admitted patients",
-      icon: Bed,
-      href: "/admissions/current",
-      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-      badge: stats?.activeCount ? `${stats.activeCount} Active` : undefined
-    },
-    {
-      title: "Patient Transfer",
-      description: "Transfer patient between beds/wards/doctors",
-      icon: ArrowRightLeft,
-      href: "/admissions/transfer",
-      color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-    },
-    {
-      title: "Discharge Patient",
-      description: "Process clinical patient discharge",
-      icon: LogOut,
-      href: "/admissions/discharge",
-      color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-    },
-    {
-      title: "Discharge Summary",
-      description: "Generate and print official discharge documents",
-      icon: FileText,
-      href: "/admissions/summary",
-      color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
-    },
-    {
-      title: "Discharge History",
-      description: "Complete archive of discharged patients",
-      icon: History,
-      href: "/admissions/discharge-history",
-      color: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-      badge: stats?.dischargedCount ? `${stats.dischargedCount} Total` : undefined
-    },
-    {
-      title: "Admission History",
-      description: "All historical inpatient admission logs",
-      icon: Clock,
-      href: "/admissions/history",
-      color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20"
-    }
-  ];
 
   if (loading) {
     return (
@@ -300,43 +247,12 @@ export default function AdmissionsOverviewPage() {
         </Card>
       </div>
 
-      {/* Submenus Quick Navigation */}
-      <div>
-        <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-3">
-          Admissions & Discharge Modules
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {submenus.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group flex flex-col justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/50 hover:shadow-md transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div className={`p-2.5 rounded-lg border ${item.color}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  {item.badge && (
-                    <Badge variant="secondary" className="text-[11px] font-semibold">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </div>
-                <div className="mt-4">
-                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
-                    {item.description}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/admissions"
+        title="Admissions & Discharge Modules"
+        subtitle="Manage new admissions, bed transfers, patient discharges, and summaries"
+      />
 
       {/* Two Columns: Recent Inpatients & Recent Discharges */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

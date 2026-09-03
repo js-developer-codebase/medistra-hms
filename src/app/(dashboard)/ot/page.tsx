@@ -26,22 +26,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
-export default function OperationTheatreHub() {
+export default function OTOperationsHub() {
   const [stats, setStats] = useState<any>({
-    todaySurgeries: 0,
+    scheduledToday: 0,
     inProgressSurgeries: 0,
-    completedSurgeries: 0,
-    pendingRequests: 0,
     emergencySurgeries: 0,
+    pendingRequests: 0,
     pacClearedCount: 0,
-    totalSuites: 5,
-    occupiedSuites: 0,
     availableRooms: 5
   });
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const { toast } = useToast();
 
   const loadData = async () => {
@@ -69,107 +66,6 @@ export default function OperationTheatreHub() {
     const interval = setInterval(loadData, 20000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleSeed = async () => {
-    try {
-      setSeeding(true);
-      const res = await fetch("/api/ot/seed", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast("Sample multi-specialty surgical cases seeded successfully!", "success");
-        loadData();
-      } else {
-        toast(data.message || "Failed to seed sample cases", "error");
-      }
-    } catch (err) {
-      toast("Error executing seeder", "error");
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const navCards = [
-    {
-      title: "OT Dashboard",
-      href: "/ot/dashboard",
-      icon: Activity,
-      desc: "Suite utilization benchmarks, caseload volumes, and surgical timeline.",
-      color: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-50 dark:bg-blue-950/40"
-    },
-    {
-      title: "Surgical Schedule",
-      href: "/ot/schedule",
-      icon: Calendar,
-      desc: "Timeline calendar across OT 1–5, surgeon assignments, and status tracker.",
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-50 dark:bg-emerald-950/40"
-    },
-    {
-      title: "Surgery Requests",
-      href: "/ot/requests",
-      icon: FileCheck2,
-      desc: "Inpatient and emergency surgical booking requisitions and approval desk.",
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-50 dark:bg-purple-950/40"
-    },
-    {
-      title: "OT Booking & Equipment",
-      href: "/ot/booking",
-      icon: Layers,
-      desc: "Surgical suite reservations, C-Arm, Laparoscopic Tower, and CSSD sterilizer checks.",
-      color: "text-indigo-600 dark:text-indigo-400",
-      bg: "bg-indigo-50 dark:bg-indigo-950/40"
-    },
-    {
-      title: "Surgical Team Roster",
-      href: "/ot/team",
-      icon: Users,
-      desc: "Primary surgeon, anesthesiologist, scrub nurse, and perfusionist assignments.",
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-50 dark:bg-amber-950/40"
-    },
-    {
-      title: "Pre-Operative Checklist",
-      href: "/ot/preop",
-      icon: ShieldCheck,
-      desc: "WHO Surgical Safety Sign-In, PAC clearance, ASA grading, and site marking.",
-      color: "text-rose-600 dark:text-rose-400",
-      bg: "bg-rose-50 dark:bg-rose-950/40"
-    },
-    {
-      title: "Anesthesia Station",
-      href: "/ot/anesthesia",
-      icon: HeartPulse,
-      desc: "GA, Spinal & Regional blocks, Mallampati airway, induction and gas logs.",
-      color: "text-teal-600 dark:text-teal-400",
-      bg: "bg-teal-50 dark:bg-teal-950/40"
-    },
-    {
-      title: "Intraoperative Notes",
-      href: "/ot/intraop",
-      icon: Scissors,
-      desc: "Time-out verification, skin incision/closure times, implants, and swab counts.",
-      color: "text-orange-600 dark:text-orange-400",
-      bg: "bg-orange-50 dark:bg-orange-950/40"
-    },
-    {
-      title: "Post-Operative (PACU)",
-      href: "/ot/postop",
-      icon: Syringe,
-      desc: "Aldrete Recovery Scoring (0–10), post-op vitals, and ICU/ward clearance.",
-      color: "text-cyan-600 dark:text-cyan-400",
-      bg: "bg-cyan-50 dark:bg-cyan-950/40"
-    },
-    {
-      title: "OT Reports & Audits",
-      href: "/ot/reports",
-      icon: BarChart3,
-      desc: "Surgical room utilization, turnaround times, infection surveillance, and CSV export.",
-      color: "text-slate-600 dark:text-slate-400",
-      bg: "bg-slate-50 dark:bg-slate-800/40"
-    }
-  ];
 
   return (
     <div className="space-y-6 pb-12">
@@ -211,16 +107,6 @@ export default function OperationTheatreHub() {
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={handleSeed}
-            disabled={seeding}
-            className="text-xs flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {seeding ? "Seeding..." : "Seed Sample Surgeries"}
           </Button>
         </div>
       </div>
@@ -318,43 +204,12 @@ export default function OperationTheatreHub() {
         </Card>
       </div>
 
-      {/* 10 Submodule Launchpad Cards */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>Operation Theatre Department Submodules</span>
-            <Badge variant="outline" className="text-xs">10 Workstations</Badge>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {navCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link key={card.href} href={card.href} className="group">
-                <Card className="h-full border hover:border-emerald-500/50 hover:shadow-md transition-all duration-200 bg-white dark:bg-slate-900 flex flex-col justify-between">
-                  <CardHeader className="p-3.5 pb-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className={`p-2 rounded-lg ${card.bg}`}>
-                        <Icon className={`h-4 w-4 ${card.color}`} />
-                      </div>
-                      <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                    <CardTitle className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
-                      {card.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3.5 pt-0">
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                      {card.desc}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Operation Theatre Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/ot"
+        title="Operation Theatre Department Submodules"
+        subtitle="Direct access to OT schedules, surgery requests, WHO checklists, intra-op, and recovery"
+      />
 
       {/* 5-Suite OT Capacity Radar & Live Schedule Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -377,7 +232,7 @@ export default function OperationTheatreHub() {
             <CardContent className="p-0 divide-y">
               {schedules.length === 0 ? (
                 <div className="p-8 text-center text-xs text-slate-400">
-                  No surgeries scheduled. Click &quot;Seed Sample Surgeries&quot; to test.
+                  No surgeries currently scheduled on the slate.
                 </div>
               ) : (
                 schedules.map((s) => (

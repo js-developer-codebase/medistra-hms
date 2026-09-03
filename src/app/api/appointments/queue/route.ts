@@ -15,8 +15,6 @@ export async function GET(req: NextRequest) {
         if (!User) {}
         if (!Department) {}
 
-        await AppointmentService.ensureSampleAppointments();
-
         const { searchParams } = new URL(req.url);
         const doctorId = searchParams.get('doctorId');
 

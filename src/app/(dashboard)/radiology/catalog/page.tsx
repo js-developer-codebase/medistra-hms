@@ -161,40 +161,6 @@ function ImagingCatalogContent() {
     }
   };
 
-  // Pre-seed standard hospital imaging procedures if catalog is empty
-  const handleSeedDefaults = async () => {
-    setSubmitting(true);
-    const standardProcedures = [
-      { name: "X-Ray Chest PA View", code: "XR-CH-01", modality: "X-RAY", bodyPart: "Chest", price: 600, preparationInstructions: "Remove metallic necklaces & clothing with metal hooks.", durationMinutes: 10, requiresContrast: false },
-      { name: "X-Ray Knee Joint AP & Lateral", code: "XR-KN-02", modality: "X-RAY", bodyPart: "Knee Joint", price: 800, preparationInstructions: "Wear loose clothing.", durationMinutes: 10, requiresContrast: false },
-      { name: "X-Ray Lumbo-Sacral (LS) Spine AP & Lat", code: "XR-SP-03", modality: "X-RAY", bodyPart: "Spine", price: 950, preparationInstructions: "Bowel clearance recommended before scan.", durationMinutes: 15, requiresContrast: false },
-      { name: "NCCT Brain (Non-Contrast Head CT)", code: "CT-BR-01", modality: "CT", bodyPart: "Brain", price: 2500, preparationInstructions: "No specific fasting required.", durationMinutes: 15, requiresContrast: false },
-      { name: "CECT Abdomen & Pelvis (Triple Phase)", code: "CT-AB-02", modality: "CT", bodyPart: "Abdomen", price: 5500, preparationInstructions: "4 hours fasting. Serum creatinine report required.", durationMinutes: 30, requiresContrast: true },
-      { name: "HRCT Chest (High Resolution CT)", code: "CT-CH-03", modality: "CT", bodyPart: "Chest", price: 3200, preparationInstructions: "Breath hold coaching required before scan.", durationMinutes: 15, requiresContrast: false },
-      { name: "MRI Brain (Non-Contrast 3.0T)", code: "MRI-BR-01", modality: "MRI", bodyPart: "Brain", price: 5500, preparationInstructions: "Screen for cardiac pacemakers, surgical clips, metal implants.", durationMinutes: 30, requiresContrast: false },
-      { name: "MRI Lumbar Spine with Screening", code: "MRI-SP-02", modality: "MRI", bodyPart: "Spine", price: 6000, preparationInstructions: "Remove all magnetic objects.", durationMinutes: 30, requiresContrast: false },
-      { name: "Ultrasound Whole Abdomen & Pelvis", code: "USG-AB-01", modality: "ULTRASOUND", bodyPart: "Abdomen", price: 1200, preparationInstructions: "6 hours fasting, full urinary bladder required.", durationMinutes: 20, requiresContrast: false },
-      { name: "Color Doppler Lower Limb Arterial", code: "USG-DP-02", modality: "ULTRASOUND", bodyPart: "Lower Extremity", price: 2800, preparationInstructions: "No special preparation required.", durationMinutes: 30, requiresContrast: false },
-      { name: "Digital Mammography Bilateral", code: "MAM-BL-01", modality: "MAMMOGRAPHY", bodyPart: "Breast", price: 2200, preparationInstructions: "Avoid talcum powder and deodorants on scan day.", durationMinutes: 20, requiresContrast: false }
-    ];
-
-    try {
-      for (const p of standardProcedures) {
-        await fetch("/api/radiology/procedures", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(p)
-        });
-      }
-      toast("Standard radiology procedures populated successfully!", "success");
-      fetchProcedures();
-    } catch (e) {
-      toast("Error populating standard procedures", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const filteredProcedures = useMemo(() => {
     return procedures.filter((p) => {
       const q = search.toLowerCase().trim();
@@ -296,19 +262,6 @@ function ImagingCatalogContent() {
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
-
-          {procedures.length === 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSeedDefaults}
-              disabled={submitting}
-              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-            >
-              <Sparkles className="h-4 w-4 mr-1.5" />
-              Populate Standard Procedures
-            </Button>
-          )}
 
           <Button
             size="sm"

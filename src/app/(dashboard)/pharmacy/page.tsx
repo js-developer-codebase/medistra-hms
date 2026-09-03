@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 interface PharmacyStats {
   totalMedicines: number;
@@ -50,7 +51,6 @@ export default function PharmacyHubPage() {
   const [recentDispenses, setRecentDispenses] = useState<any[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const { toast } = useToast();
 
   const loadData = async () => {
@@ -88,99 +88,6 @@ export default function PharmacyHubPage() {
     loadData();
   }, []);
 
-  const handleSeed = async () => {
-    try {
-      setSeeding(true);
-      const res = await fetch("/api/pharmacy/seed", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast("Seeded essential medicines, categories & suppliers!", "success");
-        loadData();
-      } else {
-        toast(data.message || "Seeding failed", "error");
-      }
-    } catch (err) {
-      toast("Error seeding pharmacy data", "error");
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const navCards = [
-    {
-      title: "Pharmacy Dashboard",
-      path: "/pharmacy/dashboard",
-      icon: LayoutDashboard,
-      description: "Inventory valuation, throughput, and sales analytics",
-      badge: "Analytics"
-    },
-    {
-      title: "Medicines",
-      path: "/pharmacy/medicines",
-      icon: Pill,
-      description: "Master catalog of drugs, formulations, racks, and batch numbers",
-      badge: `${stats?.totalMedicines || 0} Items`
-    },
-    {
-      title: "Medicine Categories",
-      path: "/pharmacy/categories",
-      icon: Layers,
-      description: "Therapeutic classifications, storage vaults, and prescription rules",
-      badge: `${stats?.totalCategories || 0} Cats`
-    },
-    {
-      title: "Prescriptions",
-      path: "/pharmacy/prescriptions",
-      icon: FileText,
-      description: "Doctor e-prescriptions queue awaiting pharmacy dispensing",
-      badge: `${stats?.pendingPrescriptionsCount || 0} Pending`,
-      badgeColor: (stats?.pendingPrescriptionsCount || 0) > 0 ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : ""
-    },
-    {
-      title: "Dispensing & POS",
-      path: "/pharmacy/dispensing",
-      icon: ShoppingCart,
-      description: "Point-of-Sale counter, bill generation, and inventory auto-deduction",
-      badge: "Counter Active"
-    },
-    {
-      title: "Returns",
-      path: "/pharmacy/returns",
-      icon: RotateCcw,
-      description: "Patient and ward medication return logging and refund audits",
-      badge: `${stats?.totalReturns || 0} Processed`
-    },
-    {
-      title: "Pharmacy Stock",
-      path: "/pharmacy/stock",
-      icon: Boxes,
-      description: "Real-time stock ledger, batch balances, and manual adjustments",
-      badge: `₹${(stats?.totalStockValuation || 0).toLocaleString("en-IN")}`
-    },
-    {
-      title: "Expiry Management",
-      path: "/pharmacy/expiry",
-      icon: ClockAlert,
-      description: "Critical batch expiry tracking, 30/90-day alert tiers, and write-offs",
-      badge: `${stats?.expiredCount || 0} Expired`,
-      badgeColor: (stats?.expiredCount || 0) > 0 ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" : ""
-    },
-    {
-      title: "Suppliers",
-      path: "/pharmacy/suppliers",
-      icon: Truck,
-      description: "Pharmaceutical distributors, Drug License records, and lead times",
-      badge: `${stats?.totalSuppliers || 0} Vendors`
-    },
-    {
-      title: "Pharmacy Reports",
-      path: "/pharmacy/reports",
-      icon: BarChart3,
-      description: "Sales revenue, consumption audits, and controlled substances log",
-      badge: "Print & Export"
-    }
-  ];
-
   return (
     <div className="space-y-6 pb-12">
       {/* Header Bar */}
@@ -205,17 +112,6 @@ export default function PharmacyHubPage() {
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSeed}
-            disabled={seeding}
-            className="text-xs flex items-center gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {seeding ? "Seeding..." : "Seed Essential Medicines"}
           </Button>
 
           <Link href="/pharmacy/dispensing">
@@ -327,48 +223,12 @@ export default function PharmacyHubPage() {
         </Card>
       </div>
 
-      {/* 10 Submodules Launchpad */}
-      <div>
-        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
-          <span>Pharmacy Modules & Workstations</span>
-          <span className="text-xs font-normal text-slate-500">10 Submodules</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          {navCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link key={card.path} href={card.path} className="group">
-                <Card className="h-full border hover:border-emerald-500/60 hover:shadow-md transition-all duration-200 bg-white dark:bg-slate-900">
-                  <CardContent className="p-4 flex flex-col justify-between h-full space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        {card.badge && (
-                          <Badge variant="secondary" className={`text-[10px] font-medium ${card.badgeColor || ""}`}>
-                            {card.badge}
-                          </Badge>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 flex items-center gap-1">
-                          {card.title}
-                          <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
-                          {card.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Dynamic Submodules Navigation */}
+      <ModuleNavCards
+        modulePath="/pharmacy"
+        title="Pharmacy Modules & Workstations"
+        subtitle="Medication inventory, electronic dispensing, POS billing, and stock analytics"
+      />
 
       {/* Operational Queues: Recent Dispenses & Low Stock Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

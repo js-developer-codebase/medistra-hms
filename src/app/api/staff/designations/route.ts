@@ -12,27 +12,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     let designations = await Designation.find().sort({ createdAt: -1 }).lean();
 
-    // If no designations exist yet, seed common hospital designations
-    if (designations.length === 0) {
-      const defaultDesignations = [
-        { name: "Senior Consultant", code: "SR-CONS", department: "Medical", level: "Senior", description: "Senior medical specialist with over 10+ years experience" },
-        { name: "Consultant Physician", code: "CONS-PHY", department: "Medical", level: "Senior", description: "Attending consultant in clinical medicine" },
-        { name: "Resident Medical Officer", code: "RMO", department: "Medical", level: "Junior", description: "Day-to-day inpatient and emergency coverage" },
-        { name: "Head Nurse / Nursing Supervisor", code: "HD-NRS", department: "Nursing", level: "Senior", description: "Oversees ward nursing operations and shift allocations" },
-        { name: "Staff Nurse (Grade I)", code: "STF-NRS-1", department: "Nursing", level: "Mid-Level", description: "Senior staff nurse managing patient bedside care" },
-        { name: "Staff Nurse (Grade II)", code: "STF-NRS-2", department: "Nursing", level: "Junior", description: "Junior ward and triage staff nurse" },
-        { name: "Chief Pharmacist", code: "CHF-PHARM", department: "Pharmacy", level: "Senior", description: "Manages hospital dispensary, stock, and narcotics register" },
-        { name: "Staff Pharmacist", code: "STF-PHARM", department: "Pharmacy", level: "Mid-Level", description: "Dispensing medicines and verifying doctor prescriptions" },
-        { name: "Senior Lab Technician", code: "SR-LAB-TECH", department: "Laboratory", level: "Senior", description: "Specialized biochemistry and hematology analysis" },
-        { name: "Lab Technician", code: "LAB-TECH", department: "Laboratory", level: "Mid-Level", description: "Specimen collection and routine laboratory testing" },
-        { name: "Radiology Technician", code: "RAD-TECH", department: "Radiology", level: "Mid-Level", description: "Operates X-Ray, CT, and MRI machinery" },
-        { name: "Front Desk Officer", code: "FDO", department: "Administration", level: "Junior", description: "Patient registration, billing inquiry, and appointment desk" },
-        { name: "Billing Officer", code: "BILL-OFF", department: "Finance", level: "Mid-Level", description: "Inpatient and outpatient billing and claims processing" },
-      ];
-      await Designation.insertMany(defaultDesignations);
-      designations = await Designation.find().sort({ createdAt: -1 }).lean();
-    }
-
     // Attach staff counts
     const staffCountMap = new Map<string, number>();
     try {

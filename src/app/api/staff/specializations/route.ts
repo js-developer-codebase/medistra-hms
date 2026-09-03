@@ -20,31 +20,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Auto-seed default specializations if empty
-    if (specializations.length === 0) {
-      const defaultSpecializations = [
-        { name: "Cardiology", code: "CARD", description: "Diagnosis and treatment of congenital heart defects, coronary artery disease, and heart failure." },
-        { name: "Neurology & Neurosurgery", code: "NEURO", description: "Disorders of the nervous system, brain stroke, epilepsy, and spinal conditions." },
-        { name: "Orthopedic Surgery", code: "ORTHO", description: "Musculoskeletal system, joint replacements, trauma care, and bone fractures." },
-        { name: "Pediatrics & Child Care", code: "PED", description: "Medical care of infants, children, adolescents, and immunizations." },
-        { name: "Obstetrics & Gynecology", code: "OBGYN", description: "Female reproductive health, prenatal care, childbirth, and postnatal wellness." },
-        { name: "Dermatology", code: "DERM", description: "Diagnosis and treatment of skin, hair, and nail disorders, cosmetic dermatology." },
-        { name: "Ophthalmology", code: "OPHTH", description: "Eye care, cataract surgeries, refractive errors, and vision health." },
-        { name: "General & Laparoscopic Surgery", code: "GEN-SURG", description: "Abdominal surgery, hernia repairs, appendix, and minimally invasive procedures." },
-        { name: "Otolaryngology (ENT)", code: "ENT", description: "Diseases of the ear, nose, throat, head and neck region." },
-        { name: "Pulmonology & Respiratory", code: "PULM", description: "Lungs, asthma, COPD, pneumonia, and sleep disorders." },
-        { name: "Medical Oncology", code: "ONCO", description: "Comprehensive cancer management, chemotherapy, and oncology care." },
-        { name: "Nephrology & Dialysis", code: "NEPH", description: "Kidney disease, hemodialysis, and hypertension management." },
-        { name: "Gastroenterology", code: "GASTRO", description: "Digestive system, liver, endoscopy, and inflammatory bowel diseases." },
-        { name: "Emergency Medicine", code: "EMERG", description: "Acute life-threatening conditions, trauma management, and resuscitation." },
-      ];
-      await Specialization.insertMany(defaultSpecializations);
-      specializations = await Specialization.find()
-        .populate("departmentId")
-        .sort({ createdAt: -1 })
-        .lean();
-    }
-
     // Attach doctor counts for each specialization
     const allDoctors = await Doctor.find().lean();
     let enriched = specializations.map((spec: any) => {

@@ -25,6 +25,7 @@ import {
   BarChart3,
   Calendar
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function WardsOperationsHubPage() {
   const router = useRouter();
@@ -59,73 +60,6 @@ export default function WardsOperationsHubPage() {
     setRefreshing(true);
     fetchStats();
   };
-
-  const SUBMODULES = [
-    {
-      title: "Wards Directory",
-      description: "Manage hospital wards, floor mapping, and capacity.",
-      href: "/wards/list",
-      icon: Building,
-      color: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-      badge: `${stats?.totalWards || 0} Wards`
-    },
-    {
-      title: "Rooms Directory",
-      description: "Configure room units, room categories, and ward assignments.",
-      href: "/wards/rooms",
-      icon: DoorOpen,
-      color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
-      badge: `${stats?.totalRooms || 0} Rooms`
-    },
-    {
-      title: "Beds Inventory",
-      description: "Complete bed inventory with bed types, rates, and active states.",
-      href: "/wards/beds",
-      icon: BedDouble,
-      color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-      badge: `${stats?.totalBeds || 0} Total Beds`
-    },
-    {
-      title: "Bed Allocation",
-      description: "Allocate and assign available hospital beds to waiting inpatients.",
-      href: "/wards/allocate",
-      icon: Plus,
-      color: "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300",
-      badge: "Allocation Station"
-    },
-    {
-      title: "Bed Transfer",
-      description: "Transfer patients between rooms, wards, and service levels.",
-      href: "/wards/transfer",
-      icon: ArrowRightLeft,
-      color: "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
-      badge: "Fast Transfer"
-    },
-    {
-      title: "Bed Occupancy",
-      description: "Ward-by-ward census, occupancy heatmaps, and length of stay.",
-      href: "/wards/occupancy",
-      icon: Activity,
-      color: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-      badge: `${stats?.occupancyRate || 0}% Occupied`
-    },
-    {
-      title: "Live Bed Board",
-      description: "Real-time visual matrix of all beds, color-coded by current status.",
-      href: "/wards/availability",
-      icon: Layers,
-      color: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
-      badge: `${stats?.availableBeds || 0} Available`
-    },
-    {
-      title: "Ward Dashboard",
-      description: "Executive census analytics, ICU readiness alerts, and capacity gauge.",
-      href: "/wards/dashboard",
-      icon: BarChart3,
-      color: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300",
-      badge: "Census Hub"
-    }
-  ];
 
   if (loading) {
     return (
@@ -253,48 +187,12 @@ export default function WardsOperationsHubPage() {
         </div>
       </div>
 
-      {/* Navigation Submodules Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-            Ward & Bed Management Submodules
-          </h2>
-          <span className="text-xs text-slate-500">8 Modules Active</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {SUBMODULES.map((mod) => {
-            const Icon = mod.icon;
-            return (
-              <Card
-                key={mod.href}
-                className="group hover:border-emerald-500/50 hover:shadow-md transition-all duration-200 cursor-pointer border relative overflow-hidden"
-                onClick={() => router.push(mod.href)}
-              >
-                <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                  <div className={`p-2 rounded-lg ${mod.color}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <Badge variant="outline" className="text-[10px] font-medium font-mono">
-                    {mod.badge}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      {mod.title}
-                    </CardTitle>
-                    <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </div>
-                  <CardDescription className="text-xs mt-1 text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {mod.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/wards"
+        title="Ward & Bed Management Submodules"
+        subtitle="Manage hospital wards, floor mapping, room units, beds inventory, and bed transfers"
+      />
 
       {/* Real-time Ward Capacity & Status Breakdown Table */}
       <Card className="border shadow-sm">

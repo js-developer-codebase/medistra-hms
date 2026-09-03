@@ -30,6 +30,7 @@ import {
   Search,
   User
 } from "lucide-react";
+import { ModuleNavCards } from "@/components/layout/module-nav-cards";
 
 export default function ClinicalEMRHubPage() {
   const router = useRouter();
@@ -64,121 +65,6 @@ export default function ClinicalEMRHubPage() {
     setRefreshing(true);
     fetchStats();
   };
-
-  const SUBMODULES = [
-    {
-      title: "Clinical Dashboard",
-      description: "Clinical activity trends, alert monitors, and consultation summaries.",
-      href: "/clinical/dashboard",
-      icon: Activity,
-      color: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-      badge: "EMR Central"
-    },
-    {
-      title: "Consultations",
-      description: "Inpatient & outpatient clinical encounters, chief complaints, and assessments.",
-      href: "/clinical/consultations",
-      icon: Stethoscope,
-      color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-      badge: `${stats?.consultationsCount || 0} Encounters`
-    },
-    {
-      title: "Medical Records",
-      description: "Centralized digital patient dossier and clinical document archive.",
-      href: "/clinical/records",
-      icon: FileText,
-      color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
-      badge: `${stats?.totalRecords || 0} Records`
-    },
-    {
-      title: "Medical History",
-      description: "Past medical, surgical, chronic, and family history repository.",
-      href: "/clinical/history",
-      icon: History,
-      color: "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
-      badge: "Patient History"
-    },
-    {
-      title: "Allergies",
-      description: "Critical drug, food, and environmental allergy and adverse reaction tracking.",
-      href: "/clinical/allergies",
-      icon: AlertOctagon,
-      color: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300",
-      badge: `${stats?.allergiesCount || 0} Flagged`
-    },
-    {
-      title: "Diagnoses",
-      description: "ICD-10 clinical diagnoses registry, provisional and final classifications.",
-      href: "/clinical/diagnoses",
-      icon: ClipboardList,
-      color: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-      badge: `${stats?.diagnosesCount || 0} Diagnoses`
-    },
-    {
-      title: "Clinical Notes",
-      description: "SOAP progress notes, nursing observations, and ward rounds notes.",
-      href: "/clinical/notes",
-      icon: FileEdit,
-      color: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
-      badge: `${stats?.notesCount || 0} Notes`
-    },
-    {
-      title: "Treatment Plans",
-      description: "Therapeutic regimens, clinical pathways, and care goal documentation.",
-      href: "/clinical/plans",
-      icon: Crosshair,
-      color: "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300",
-      badge: `${stats?.plansCount || 0} Plans`
-    },
-    {
-      title: "Prescriptions",
-      description: "Electronic prescribing, medication orders, dosages, and Rx generation.",
-      href: "/clinical/prescriptions",
-      icon: Pill,
-      color: "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300",
-      badge: "Rx Registry"
-    },
-    {
-      title: "Clinical Orders",
-      description: "Laboratory, imaging, nursing, and procedure diagnostic orders.",
-      href: "/clinical/orders",
-      icon: ShoppingBag,
-      color: "bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
-      badge: `${stats?.ordersCount || 0} Orders`
-    },
-    {
-      title: "Referrals",
-      description: "Specialist consultations, inter-departmental transfers, and external referrals.",
-      href: "/clinical/referrals",
-      icon: Share2,
-      color: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950/50 dark:text-fuchsia-300",
-      badge: `${stats?.referralsCount || 0} Referrals`
-    },
-    {
-      title: "Follow-Up",
-      description: "Post-discharge callbacks, chronic disease monitoring, and review visits.",
-      href: "/clinical/follow-up",
-      icon: CalendarCheck,
-      color: "bg-lime-50 text-lime-700 dark:bg-lime-950/50 dark:text-lime-300",
-      badge: `${stats?.followUpsCount || 0} Scheduled`
-    },
-    {
-      title: "Vital Signs",
-      description: "Blood pressure, heart rate, SpO2, temperature, and BMI charting.",
-      href: "/clinical/vitals",
-      icon: HeartPulse,
-      color: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300",
-      badge: `${stats?.vitalsCount || 0} Logs`
-    },
-    {
-      title: "Patient Problems",
-      description: "Active, chronic, and resolved clinical problem list management.",
-      href: "/clinical/problems",
-      icon: AlertTriangle,
-      color: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
-      badge: `${stats?.problemsCount || 0} Problems`
-    }
-  ];
 
   if (loading) {
     return (
@@ -294,48 +180,12 @@ export default function ClinicalEMRHubPage() {
         </div>
       </div>
 
-      {/* Submodules Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-            Clinical Submodules & Workstations
-          </h2>
-          <span className="text-xs text-slate-500">14 Workstations Active</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {SUBMODULES.map((mod) => {
-            const Icon = mod.icon;
-            return (
-              <Card
-                key={mod.href}
-                className="group hover:border-emerald-500/50 hover:shadow-md transition-all duration-200 cursor-pointer border relative overflow-hidden"
-                onClick={() => router.push(mod.href)}
-              >
-                <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                  <div className={`p-2 rounded-lg ${mod.color}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <Badge variant="outline" className="text-[10px] font-medium font-mono">
-                    {mod.badge}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      {mod.title}
-                    </CardTitle>
-                    <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </div>
-                  <CardDescription className="text-xs mt-1 text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {mod.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      {/* Submodule Navigation */}
+      <ModuleNavCards
+        modulePath="/clinical"
+        title="Clinical Submodules & Workstations"
+        subtitle="Electronic medical records, consultations, doctor notes, prescriptions, and care plans"
+      />
 
       {/* Recent Clinical Records Table */}
       <Card className="border shadow-sm">
