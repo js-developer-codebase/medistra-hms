@@ -1,5 +1,8 @@
 import { Types } from "mongoose";
 import Room from "@/models/room.model";
+// Ensure referenced models are registered in Mongoose
+import "@/models/ward.model";
+import "@/models/organization.model";
 import { IRoom } from "@/interfaces/room.interface";
 import { CreateRoomDto, UpdateRoomDto } from "@/dto/room.dto";
 

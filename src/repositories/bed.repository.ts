@@ -1,5 +1,9 @@
 import { Types } from "mongoose";
 import Bed from "@/models/bed.model";
+// Ensure referenced models are registered in Mongoose
+import "@/models/room.model";
+import "@/models/ward.model";
+import "@/models/organization.model";
 import { IBed } from "@/interfaces/bed.interface";
 import { CreateBedDto, UpdateBedDto } from "@/dto/bed.dto";
 
@@ -8,8 +12,8 @@ export class BedRepository {
         return await new Bed(data).save();
     }
 
-    async findAll(): Promise<IBed[]> {
-        return await Bed.find().populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
+    async findAll(query: any = {}): Promise<IBed[]> {
+        return await Bed.find(query).populate({ path: "roomId", populate: { path: "wardId", populate: { path: "organizationId" } } }).lean();
     }
 
     async findById(id: Types.ObjectId): Promise<IBed | null> {
