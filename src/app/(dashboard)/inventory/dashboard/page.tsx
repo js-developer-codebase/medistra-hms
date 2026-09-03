@@ -72,7 +72,7 @@ export default function InventoryDashboard() {
                         <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${stats.totalValue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">₹{stats.totalValue.toFixed(2)}</div>
                     </CardContent>
                 </Card>
             </div>

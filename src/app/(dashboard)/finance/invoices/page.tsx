@@ -45,9 +45,9 @@ export default function InvoicesListPage() {
                 <TableRow>
                   <TableHead>Invoice ID</TableHead>
                   <TableHead>Patient ID</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead>Final Amount</TableHead>
+                  <TableHead>Total Amount (₹)</TableHead>
+                  <TableHead>Discount (₹)</TableHead>
+                  <TableHead>Final Amount (₹)</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -55,11 +55,11 @@ export default function InvoicesListPage() {
                 {invoices.length > 0 ? (
                   invoices.map((invoice) => (
                     <TableRow key={invoice._id}>
-                      <TableCell>{invoice._id}</TableCell>
-                      <TableCell>{invoice.patientId}</TableCell>
-                      <TableCell>${invoice.totalAmount.toFixed(2)}</TableCell>
-                      <TableCell>${invoice.discount.toFixed(2)}</TableCell>
-                      <TableCell>${invoice.finalAmount.toFixed(2)}</TableCell>
+                       <TableCell>{invoice._id}</TableCell>
+                       <TableCell>{invoice.patientId}</TableCell>
+                       <TableCell>₹{invoice.totalAmount.toFixed(2)}</TableCell>
+                       <TableCell>₹{invoice.discount.toFixed(2)}</TableCell>
+                       <TableCell>₹{invoice.finalAmount.toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant={invoice.status === "PAID" ? "default" : "outline"}>
                           {invoice.status}

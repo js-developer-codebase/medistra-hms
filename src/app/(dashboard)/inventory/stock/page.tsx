@@ -76,7 +76,7 @@ export default function StockPage() {
                             <Input value={newItem.unit} onChange={(e) => setNewItem({...newItem, unit: e.target.value})} required />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Price</label>
+                            <label className="text-sm font-medium">Price (₹)</label>
                             <Input type="number" value={newItem.unitPrice} onChange={(e) => setNewItem({...newItem, unitPrice: parseFloat(e.target.value)})} required min="0" step="0.01" />
                         </div>
                         <Button type="submit">Add Item</Button>
@@ -96,8 +96,8 @@ export default function StockPage() {
                                     <TableHead>Name</TableHead>
                                     <TableHead>Category</TableHead>
                                     <TableHead>Stock</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead>Total Value</TableHead>
+                                    <TableHead>Price (₹)</TableHead>
+                                    <TableHead>Total Value (₹)</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -111,8 +111,8 @@ export default function StockPage() {
                                                 {item.currentStock} {item.unit}
                                             </span>
                                         </TableCell>
-                                        <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
-                                        <TableCell>${(item.currentStock * item.unitPrice).toFixed(2)}</TableCell>
+                                        <TableCell>₹{item.unitPrice.toFixed(2)}</TableCell>
+                                        <TableCell>₹{(item.currentStock * item.unitPrice).toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                                 {items.length === 0 && (

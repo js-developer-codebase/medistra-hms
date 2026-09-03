@@ -29,7 +29,6 @@ import {
   Loader2,
   Phone,
   Mail,
-  DollarSign,
   MapPin,
   GraduationCap,
 } from "lucide-react";
@@ -420,7 +419,7 @@ export default function DoctorsPage() {
                     <TableHead>Specialization</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Room / License</TableHead>
-                    <TableHead>Consultation Fee</TableHead>
+                    <TableHead>Consultation Fee (₹)</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>

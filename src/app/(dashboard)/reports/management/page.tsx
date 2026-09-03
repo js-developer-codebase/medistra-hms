@@ -89,7 +89,7 @@ export default function ManagementDashboardPage() {
             <Banknote className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{data.totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>

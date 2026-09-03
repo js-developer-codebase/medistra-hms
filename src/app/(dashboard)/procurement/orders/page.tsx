@@ -89,7 +89,7 @@ export default function PurchaseOrdersPage() {
                                     <TableHead>PO Number</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Total Amount</TableHead>
+                                    <TableHead>Total Amount (₹)</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -103,7 +103,7 @@ export default function PurchaseOrdersPage() {
                                                 {order.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                                        <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
                                         <TableCell>
                                             <Button variant="outline" size="sm">View / Edit</Button>
                                         </TableCell>

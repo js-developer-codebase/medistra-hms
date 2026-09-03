@@ -95,7 +95,7 @@ export default function MedicinesPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="unitPrice">Unit Price</Label>
+                                    <Label htmlFor="unitPrice">Unit Price (₹)</Label>
                                     <Input id="unitPrice" type="number" required value={formData.unitPrice} onChange={(e) => setFormData({...formData, unitPrice: Number(e.target.value)})} />
                                 </div>
                                 <div className="space-y-2">
@@ -127,7 +127,7 @@ export default function MedicinesPage() {
                             <TableHead>Category</TableHead>
                             <TableHead>Generic Name</TableHead>
                             <TableHead>Stock</TableHead>
-                            <TableHead>Price</TableHead>
+                            <TableHead>Price (₹)</TableHead>
                             <TableHead>Expiry</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
@@ -139,7 +139,7 @@ export default function MedicinesPage() {
                                 <TableCell>{medicine.category}</TableCell>
                                 <TableCell>{medicine.genericName || "-"}</TableCell>
                                 <TableCell>{medicine.stockQuantity}</TableCell>
-                                <TableCell>${medicine.unitPrice.toFixed(2)}</TableCell>
+                                <TableCell>₹{medicine.unitPrice.toFixed(2)}</TableCell>
                                 <TableCell>{new Date(medicine.expiryDate).toLocaleDateString()}</TableCell>
                                 <TableCell>
                                     {medicine.stockQuantity <= medicine.reorderLevel ? (

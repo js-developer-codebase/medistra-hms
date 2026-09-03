@@ -658,7 +658,7 @@ function LabOrdersContent() {
                             </div>
                           </div>
                           <Badge variant="outline" className="font-mono">
-                            ${t.price}
+                            ₹{t.price}
                           </Badge>
                         </div>
                       );

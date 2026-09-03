@@ -219,7 +219,7 @@ function TestCatalogContent() {
       "Test Code",
       "Test Name",
       "Category",
-      "Price",
+      "Price (INR)",
       "Normal Range",
       "Turnaround Time"
     ];
@@ -363,7 +363,7 @@ function TestCatalogContent() {
                   <TableHead>Category</TableHead>
                   <TableHead>Reference Range</TableHead>
                   <TableHead>Turnaround</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Price (₹)</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -402,7 +402,7 @@ function TestCatalogContent() {
                       </TableCell>
 
                       <TableCell className="text-right font-mono font-bold">
-                        ${t.price}
+                        ₹{t.price}
                       </TableCell>
 
                       <TableCell className="text-right">
@@ -491,7 +491,7 @@ function TestCatalogContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="price" className="text-xs font-semibold">
-                    Price ($) *
+                    Price (₹) *
                   </Label>
                   <Input
                     type="number"

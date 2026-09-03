@@ -136,7 +136,7 @@ export default function CreateInvoicePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Price</Label>
+                    <Label>Price (₹)</Label>
                     <Input 
                       type="number" 
                       value={item.price} 
@@ -154,7 +154,7 @@ export default function CreateInvoicePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Discount</Label>
+                    <Label>Discount (₹)</Label>
                     <Input 
                       type="number" 
                       value={item.discount} 
@@ -162,7 +162,7 @@ export default function CreateInvoicePage() {
                     />
                   </div>
                   <div className="flex justify-between items-center">
-                    <div className="text-sm font-medium">Total: ${item.total.toFixed(2)}</div>
+                    <div className="text-sm font-medium">Total: ₹{item.total.toFixed(2)}</div>
                     {items.length > 1 && (
                       <Button type="button" onClick={() => removeItem(index)} variant="destructive" size="sm">
                         Remove
@@ -175,9 +175,9 @@ export default function CreateInvoicePage() {
 
             <div className="flex justify-end pt-4 border-t">
               <div className="space-y-2 text-right">
-                <p>Subtotal: ${totals.totalAmount.toFixed(2)}</p>
-                <p>Total Discount: ${totals.totalDiscount.toFixed(2)}</p>
-                <p className="text-xl font-bold">Final Amount: ${totals.finalAmount.toFixed(2)}</p>
+                <p>Subtotal: ₹{totals.totalAmount.toFixed(2)}</p>
+                <p>Total Discount: ₹{totals.totalDiscount.toFixed(2)}</p>
+                <p className="text-xl font-bold">Final Amount: ₹{totals.finalAmount.toFixed(2)}</p>
               </div>
             </div>
 
