@@ -58,8 +58,26 @@ const prescriptionSchema = new Schema<IPrescription>(
         },
         notes: {
             type: String
+        },
+        dispenseStatus: {
+            type: String,
+            enum: ["PENDING", "PARTIAL", "DISPENSED", "CANCELLED"],
+            default: "PENDING"
+        },
+        dispensedAt: {
+            type: Date
+        },
+        dispensedBy: {
+            type: Types.ObjectId,
+            ref: "User"
+        },
+        invoiceId: {
+            type: Types.ObjectId,
+            ref: "Invoice"
         }
-    }, { timestamps: true })
+    }, 
+    { timestamps: true }
+);
 
 const Prescription = models.Prescription || model<IPrescription>('Prescription', prescriptionSchema);
 export default Prescription;
