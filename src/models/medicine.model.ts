@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, models } from "mongoose";
 import { IMedicine } from "@/interfaces/medicine.interface";
 
 const medicineSchema = new Schema<IMedicine>(
@@ -18,5 +18,5 @@ const medicineSchema = new Schema<IMedicine>(
     { timestamps: true }
 );
 
-const Medicine = model<IMedicine>('Medicine', medicineSchema);
+const Medicine = models.Medicine || model<IMedicine>('Medicine', medicineSchema);
 export default Medicine;

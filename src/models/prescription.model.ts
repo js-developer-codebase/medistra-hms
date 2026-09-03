@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, models } from "mongoose";
 import { IPrescription } from "@/interfaces/prescription.interface";
 
 const prescriptionSchema = new Schema<IPrescription>(
@@ -61,5 +61,5 @@ const prescriptionSchema = new Schema<IPrescription>(
         }
     }, { timestamps: true })
 
-const Prescription = model<IPrescription>('Prescription', prescriptionSchema);
+const Prescription = models.Prescription || model<IPrescription>('Prescription', prescriptionSchema);
 export default Prescription;
