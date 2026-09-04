@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medistra-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/medistra-hms
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=medistra_super_secret_production_jwt_key_2026_hms
+      - DEFAULT_ADMIN_EMAIL=admin@hospital.com
+      - DEFAULT_ADMIN_PASSWORD=password123
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - medistra-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: medistra-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=medistra-hms
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - medistra-network
+
+  mongo-express:
+    image: mongo-express:1.0.2-alpine
+    container_name: medistra-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=medistra
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - medistra-network
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  medistra-network:
+    driver: bridge
