@@ -49,6 +49,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
           });
           const topLevel = json.data.filter((m: MenuItem) => !childIds.has(m._id.toString()));
           setMenus(topLevel);
+
+          // Auto-expand menu that matches current pathname
+          const initialExpanded: Record<string, boolean> = {};
+          topLevel.forEach((m: MenuItem) => {
+            if (
+              (m.path && m.path !== "/" && pathname.startsWith(m.path)) ||
+              (m.children && m.children.some((c: MenuItem) => c.path && (pathname === c.path || pathname.startsWith(c.path))))
+            ) {
+              initialExpanded[m._id] = true;
+            }
+          });
+          setExpandedItems((prev) => ({ ...initialExpanded, ...prev }));
         }
       } catch (err) {
         console.error("Failed to fetch menus:", err);
@@ -57,7 +69,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       }
     }
     fetchMenus();
-  }, []);
+  }, [pathname]);
+
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));

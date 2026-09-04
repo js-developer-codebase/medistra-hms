@@ -3,6 +3,9 @@ import { Types } from "mongoose";
 import dbConnect from "@/lib/dbConnect";
 import defaultDoctorService, { DoctorService } from "@/services/doctor.service";
 import { CreateDoctorDto, UpdateDoctorDto } from "@/dto/doctor.dto";
+import User from "@/models/user.model";
+import Role from "@/models/role.model";
+import bcrypt from "bcryptjs";
 
 export class DoctorController {
     constructor(private doctorService: DoctorService = defaultDoctorService) { }
@@ -10,30 +13,71 @@ export class DoctorController {
     async createDoctor(request: NextRequest): Promise<NextResponse> {
         try {
             await dbConnect();
-            const data: CreateDoctorDto = await request.json();
+            const body: any = await request.json();
 
-            if (!data.userId || !data.departmentId || !data.licenseNo) {
+            let userId = body.userId;
+
+            // If user information is provided directly, find or create the User
+            if (!userId && body.email && body.name) {
+                let existingUser = await User.findOne({ email: body.email.toLowerCase().trim() });
+                if (!existingUser) {
+                    let doctorRole = await Role.findOne({ role: "DOCTOR" });
+                    if (!doctorRole) {
+                        doctorRole = await Role.create({
+                            role: "DOCTOR",
+                            access: []
+                        });
+                    }
+                    const hashedPassword = await bcrypt.hash(body.password || "doctor123", 10);
+                    existingUser = await User.create({
+                        name: body.name.trim(),
+                        email: body.email.toLowerCase().trim(),
+                        password: hashedPassword,
+                        gender: body.gender || "OTHER",
+                        phone: body.phone,
+                        role: doctorRole._id,
+                        isActive: true
+                    });
+                }
+                userId = existingUser._id.toString();
+            }
+
+            if (!userId || !body.departmentId || !body.licenseNo) {
                 return NextResponse.json(
-                    { success: false, message: "Fields 'userId', 'departmentId', and 'licenseNo' are required" },
+                    { success: false, message: "Doctor Name/User, Department, and License No. are required" },
                     { status: 400 }
                 );
             }
 
-            if (!Types.ObjectId.isValid(data.userId)) {
+            if (!Types.ObjectId.isValid(userId)) {
                 return NextResponse.json(
                     { success: false, message: "Invalid user ID format" },
                     { status: 400 }
                 );
             }
 
-            if (!Types.ObjectId.isValid(data.departmentId)) {
+            if (!Types.ObjectId.isValid(body.departmentId)) {
                 return NextResponse.json(
                     { success: false, message: "Invalid department ID format" },
                     { status: 400 }
                 );
             }
 
-            const doctor = await this.doctorService.createDoctor(data);
+            const doctorData: CreateDoctorDto = {
+                userId,
+                departmentId: body.departmentId,
+                licenseNo: body.licenseNo.trim(),
+                specialization: body.specialization?.trim() || "",
+                qualification: body.qualification?.trim() || "",
+                experienceYears: Number(body.experienceYears) || 0,
+                consultationFee: Number(body.consultationFee) || 0,
+                roomNumber: body.roomNumber?.trim() || "",
+                bio: body.bio?.trim() || "",
+                phone: body.phone?.trim() || "",
+                status: body.status || "ACTIVE"
+            };
+
+            const doctor = await this.doctorService.createDoctor(doctorData);
 
             return NextResponse.json(
                 { success: true, message: "Doctor created successfully", data: doctor },
@@ -54,19 +98,25 @@ export class DoctorController {
 
             const { searchParams } = new URL(request.url);
             const departmentId = searchParams.get('departmentId');
+            const search = searchParams.get('search')?.toLowerCase().trim();
 
-            let doctors;
+            let doctors = await this.doctorService.getAllDoctors();
 
-            if (departmentId) {
-                if (!Types.ObjectId.isValid(departmentId)) {
-                    return NextResponse.json(
-                        { success: false, message: "Invalid department ID" },
-                        { status: 400 }
-                    );
-                }
-                doctors = await this.doctorService.getDoctorsByDepartmentId(new Types.ObjectId(departmentId));
-            } else {
-                doctors = await this.doctorService.getAllDoctors();
+            if (departmentId && Types.ObjectId.isValid(departmentId)) {
+                doctors = doctors.filter((d: any) => 
+                    d.departmentId && (d.departmentId._id?.toString() === departmentId || d.departmentId.toString() === departmentId)
+                );
+            }
+
+            if (search) {
+                doctors = doctors.filter((d: any) => {
+                    const name = d.userId?.name?.toLowerCase() || "";
+                    const email = d.userId?.email?.toLowerCase() || "";
+                    const spec = d.specialization?.toLowerCase() || "";
+                    const lic = d.licenseNo?.toLowerCase() || "";
+                    const dept = d.departmentId?.name?.toLowerCase() || "";
+                    return name.includes(search) || email.includes(search) || spec.includes(search) || lic.includes(search) || dept.includes(search);
+                });
             }
 
             return NextResponse.json(
@@ -123,23 +173,35 @@ export class DoctorController {
                 );
             }
 
-            const data: UpdateDoctorDto = await request.json();
+            const body: any = await request.json();
 
-            if (data.userId && !Types.ObjectId.isValid(data.userId)) {
+            if (body.userId && !Types.ObjectId.isValid(body.userId)) {
                 return NextResponse.json(
                     { success: false, message: "Invalid user ID format" },
                     { status: 400 }
                 );
             }
 
-            if (data.departmentId && !Types.ObjectId.isValid(data.departmentId)) {
+            if (body.departmentId && !Types.ObjectId.isValid(body.departmentId)) {
                 return NextResponse.json(
                     { success: false, message: "Invalid department ID format" },
                     { status: 400 }
                 );
             }
 
-            const doctor = await this.doctorService.updateDoctor(new Types.ObjectId(id), data);
+            const doctor = await this.doctorService.updateDoctor(new Types.ObjectId(id), body);
+
+            // Also update linked user profile if doctor has userId
+            if (doctor && doctor.userId) {
+                const userUpdate: any = {};
+                if (body.name) userUpdate.name = body.name.trim();
+                if (body.phone) userUpdate.phone = body.phone.trim();
+                if (typeof body.isActive === "boolean") userUpdate.isActive = body.isActive;
+                if (Object.keys(userUpdate).length > 0) {
+                    const uId = (doctor.userId as any)._id || doctor.userId;
+                    await User.findByIdAndUpdate(uId, userUpdate);
+                }
+            }
 
             return NextResponse.json(
                 { success: true, message: "Doctor updated successfully", data: doctor },

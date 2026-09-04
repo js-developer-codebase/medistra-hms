@@ -78,4 +78,50 @@ export class ClinicalController {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
   }
+
+  static async updateRecord(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+      const body = await req.json();
+      const updated = await ClinicalService.updateRecord(params.id, body);
+      return NextResponse.json({ success: true, data: updated });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+  }
+
+  static async deleteRecord(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+      const deleted = await ClinicalService.deleteRecord(params.id);
+      return NextResponse.json({ success: true, data: deleted });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+  }
+
+  static async deleteDiagnosis(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+      const deleted = await ClinicalService.deleteDiagnosis(params.id);
+      return NextResponse.json({ success: true, data: deleted });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+  }
+
+  static async deleteVitals(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+      const deleted = await ClinicalService.deleteVitals(params.id);
+      return NextResponse.json({ success: true, data: deleted });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+  }
+
+  static async getClinicalStats(req: NextRequest) {
+    try {
+      const stats = await ClinicalService.getClinicalStats();
+      return NextResponse.json({ success: true, data: stats });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+  }
 }

@@ -47,20 +47,27 @@ export class BedController {
             
             const { searchParams } = new URL(request.url);
             const roomId = searchParams.get('roomId');
+            const status = searchParams.get('status');
+            const bedType = searchParams.get('bedType');
             
-            let beds;
-            
+            const query: any = {};
             if (roomId) {
-                 if (!Types.ObjectId.isValid(roomId)) {
+                if (!Types.ObjectId.isValid(roomId)) {
                     return NextResponse.json(
                         { success: false, message: "Invalid room ID" },
                         { status: 400 }
                     );
                 }
-                beds = await this.bedService.getBedsByRoomId(new Types.ObjectId(roomId));
-            } else {
-                beds = await this.bedService.getAllBeds();
+                query.roomId = new Types.ObjectId(roomId);
             }
+            if (status) {
+                query.status = status;
+            }
+            if (bedType) {
+                query.bedType = bedType;
+            }
+
+            const beds = await this.bedService.getAllBeds(query);
 
             return NextResponse.json(
                 { success: true, count: beds.length, data: beds },

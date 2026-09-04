@@ -1,22 +1,21 @@
-import { model, models, Schema, Types } from "mongoose";
+import mongoose, { model, models, Schema, Types } from "mongoose";
 import { IAppointment } from "@/interfaces/appointment.interface";
 
 const appointmentSchema = new Schema<IAppointment>(
     {
         patientId: {
-            type: Types.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: 'Patient',
             required: true
         },
         doctorId: {
-            type: Types.ObjectId,
-            ref: 'User',
+            type: Schema.Types.ObjectId,
+            ref: 'Doctor',
             required: true
         },
         branchId: {
-            type: Types.ObjectId,
-            ref: 'Branch',
-            required: true
+            type: Schema.Types.ObjectId,
+            ref: 'Organization'
         },
         appointmentDate: {
             type: Date,
@@ -25,6 +24,10 @@ const appointmentSchema = new Schema<IAppointment>(
         appointmentTime: {
             type: String,
             required: true
+        },
+        tokenNumber: {
+            type: String,
+            trim: true
         },
         status: {
             type: String,
@@ -39,12 +42,29 @@ const appointmentSchema = new Schema<IAppointment>(
             ],
             default: "SCHEDULED",
         },
+        queueStatus: {
+            type: String,
+            enum: [
+                "WAITING",
+                "TRIAGE",
+                "IN_CONSULTATION",
+                "COMPLETED",
+                "SKIPPED",
+            ],
+            default: "WAITING",
+        },
+        priority: {
+            type: String,
+            enum: ["NORMAL", "URGENT", "VIP"],
+            default: "NORMAL",
+        },
         type: {
             type: String,
             enum: [
                 "NEW",
                 "FOLLOW_UP",
                 "EMERGENCY",
+                "ROUTINE_CHECKUP"
             ],
             default: "NEW",
         },
@@ -54,6 +74,46 @@ const appointmentSchema = new Schema<IAppointment>(
         },
         notes: {
             type: String
+        },
+        consultationFee: {
+            type: Number,
+            default: 0
+        },
+        paymentStatus: {
+            type: String,
+            enum: ["PAID", "PENDING", "WAIVED"],
+            default: "PENDING"
+        },
+        paymentMode: {
+            type: String,
+            default: "CASH"
+        },
+        cancellationReason: {
+            type: String
+        },
+        cancellationCategory: {
+            type: String
+        },
+        cancelledAt: {
+            type: Date
+        },
+        rescheduledFrom: {
+            type: Schema.Types.Mixed
+        },
+        rescheduleReason: {
+            type: String
+        },
+        checkedInAt: {
+            type: Date
+        },
+        consultationStartedAt: {
+            type: Date
+        },
+        consultationEndedAt: {
+            type: Date
+        },
+        noShowRecordedAt: {
+            type: Date
         }
     }, { timestamps: true });
 

@@ -22,3 +22,5 @@ export class MedicineService {
         return Medicine.findByIdAndDelete(id);
     }
 }
+
+export default MedicineService;

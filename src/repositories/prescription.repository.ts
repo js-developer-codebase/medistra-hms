@@ -1,5 +1,9 @@
 import { Types } from "mongoose";
 import Prescription from "@/models/prescription.model";
+import "@/models/patient.model";
+import "@/models/user.model";
+import "@/models/organization.model";
+import "@/models/appointment.model";
 import { IPrescription } from "@/interfaces/prescription.interface";
 import { CreatePrescriptionDto, UpdatePrescriptionDto } from "@/dto/prescription.dto";
 

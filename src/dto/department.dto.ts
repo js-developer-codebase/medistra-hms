@@ -1,9 +1,13 @@
 import { Types } from "mongoose";
 
 export interface CreateDepartmentDto {
-    name?: string; // Optional due to default in schema, but good to have in DTO
+    name?: string;
     code: string;
-    organizationId: Types.ObjectId | string;
+    organizationId?: Types.ObjectId | string;
+    headOfDepartment?: Types.ObjectId | string;
+    location?: string;
+    phoneExtension?: string;
+    description?: string;
     isActive?: boolean;
 }
 
@@ -11,5 +15,9 @@ export interface UpdateDepartmentDto {
     name?: string;
     code?: string;
     organizationId?: Types.ObjectId | string;
+    headOfDepartment?: Types.ObjectId | string;
+    location?: string;
+    phoneExtension?: string;
+    description?: string;
     isActive?: boolean;
 }

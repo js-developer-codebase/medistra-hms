@@ -14,7 +14,7 @@ const organizationSchema = new Schema<IOrganization>(
         },
         organizationType: {
             type: String,
-            enum: ['HOSPITAL', 'CLINIC', 'PHARMACY'],
+            enum: ['HOSPITAL', 'CLINIC', 'PHARMACY', 'DIAGNOSTIC'],
             required: true
         },
         headQuarter: {
@@ -36,12 +36,33 @@ const organizationSchema = new Schema<IOrganization>(
         address: {
             type: String,
         },
+        city: {
+            type: String,
+        },
+        state: {
+            type: String,
+        },
+        pincode: {
+            type: String,
+        },
+        country: {
+            type: String,
+            default: "India",
+        },
+        capacity: {
+            type: Number,
+            default: 0,
+        },
         logo: {
             type: String
         },
         isActive: {
             type: Boolean,
             default: true
+        },
+        metadata: {
+            type: Schema.Types.Mixed,
+            default: {},
         }
     }, { timestamps: true })
 

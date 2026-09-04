@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, models } from "mongoose";
 import { IPrescription } from "@/interfaces/prescription.interface";
 
 const prescriptionSchema = new Schema<IPrescription>(
@@ -16,12 +16,12 @@ const prescriptionSchema = new Schema<IPrescription>(
         branchId: {
             type: Types.ObjectId,
             ref: 'Branch',
-            required: true
+            required: false
         },
         appointmentId: {
             type: Types.ObjectId,
             ref: 'Appointment',
-            required: true
+            required: false
         },
         visitDate: {
             type: Date,
@@ -58,8 +58,26 @@ const prescriptionSchema = new Schema<IPrescription>(
         },
         notes: {
             type: String
+        },
+        dispenseStatus: {
+            type: String,
+            enum: ["PENDING", "PARTIAL", "DISPENSED", "CANCELLED"],
+            default: "PENDING"
+        },
+        dispensedAt: {
+            type: Date
+        },
+        dispensedBy: {
+            type: Types.ObjectId,
+            ref: "User"
+        },
+        invoiceId: {
+            type: Types.ObjectId,
+            ref: "Invoice"
         }
-    }, { timestamps: true })
+    }, 
+    { timestamps: true }
+);
 
-const Prescription = model<IPrescription>('Prescription', prescriptionSchema);
+const Prescription = models.Prescription || model<IPrescription>('Prescription', prescriptionSchema);
 export default Prescription;

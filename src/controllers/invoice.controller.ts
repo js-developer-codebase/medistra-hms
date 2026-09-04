@@ -12,18 +12,35 @@ export class InvoiceController {
             await dbConnect();
             const data: CreateInvoiceDto = await request.json();
 
-            if (!data.patientId || !data.items || !Array.isArray(data.items) || data.totalAmount === undefined || data.discount === undefined || data.finalAmount === undefined || !data.branchId) {
+            if (!data.patientId || !data.items || !Array.isArray(data.items) || data.totalAmount === undefined || data.discount === undefined || data.finalAmount === undefined) {
                 return NextResponse.json(
-                    { success: false, message: "Required fields are missing" },
+                    { success: false, message: "Required fields are missing: patientId, items, totalAmount, discount, finalAmount" },
                     { status: 400 }
                 );
             }
 
-            if (!Types.ObjectId.isValid(data.patientId) || !Types.ObjectId.isValid(data.branchId)) {
+            if (!Types.ObjectId.isValid(data.patientId)) {
                 return NextResponse.json(
-                    { success: false, message: "Invalid ID format for patient or branch" },
+                    { success: false, message: "Invalid ID format for patient" },
                     { status: 400 }
                 );
+            }
+
+            if (data.branchId && !Types.ObjectId.isValid(data.branchId)) {
+                delete (data as any).branchId;
+            }
+
+            if (!data.invoiceNumber) {
+                const dateStr = new Date().toISOString().slice(0, 7).replace("-", "");
+                const randomCode = Math.floor(1000 + Math.random() * 9000);
+                data.invoiceNumber = `INV-${dateStr}-${randomCode}`;
+            }
+
+            if (data.paidAmount === undefined) {
+                data.paidAmount = data.status === "PAID" ? data.finalAmount : 0;
+            }
+            if (data.balanceAmount === undefined) {
+                data.balanceAmount = Math.max(0, data.finalAmount - data.paidAmount);
             }
 
             const invoice = await this.invoiceService.createInvoice(data);

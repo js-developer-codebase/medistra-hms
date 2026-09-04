@@ -14,8 +14,8 @@ export class BedService {
         return await this.repository.create(data);
     }
 
-    async getAllBeds(): Promise<IBed[]> {
-        return await this.repository.findAll();
+    async getAllBeds(query: any = {}): Promise<IBed[]> {
+        return await this.repository.findAll(query);
     }
 
     async getBedById(id: Types.ObjectId): Promise<IBed | null> {

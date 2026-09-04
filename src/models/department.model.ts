@@ -1,35 +1,11 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import { IDepartment } from "@/interfaces/department.interface";
 
 const departmentSchema = new Schema<IDepartment>(
     {
         name: {
             type: String,
-            enum: [
-                "CARDIOLOGY",
-                "NEUROLOGY",
-                "ORTHOPEDICS",
-                "PEDIATRICS",
-                "GYNECOLOGY",
-                "DERMATOLOGY",
-                "OPHTHALMOLOGY",
-                "OTORHINOLARYNGOLOGY",
-                "UROLOGY",
-                "GASTROENTEROLOGY",
-                "ENDOCRINOLOGY",
-                "NEPHROLOGY",
-                "RHEUMATOLOGY",
-                "ONCOLOGY",
-                "HEMATOLOGY",
-                "PULMONOLOGY",
-                "CARDIOTHORACIC",
-                "VASCULAR",
-                "TRANSPLANTATION",
-                "EMERGENCY",
-                "INTERNAL_MEDICINE",
-                "OTHER"
-            ],
-            default: 'OTHER',
+            required: true,
             trim: true
         },
         code: {
@@ -38,15 +14,30 @@ const departmentSchema = new Schema<IDepartment>(
             trim: true
         },
         organizationId: {
-            type: Types.ObjectId,
-            ref: 'Organization',
-            required: true
+            type: Schema.Types.ObjectId,
+            ref: 'Organization'
+        },
+        headOfDepartment: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        location: {
+            type: String,
+            trim: true
+        },
+        phoneExtension: {
+            type: String,
+            trim: true
+        },
+        description: {
+            type: String,
+            trim: true
         },
         isActive: {
             type: Boolean,
             default: true
         }
-    }, { timestamps: true })
+    }, { timestamps: true });
 
-const Department = model<IDepartment>('Department', departmentSchema);
+const Department = mongoose.models.Department || mongoose.model<IDepartment>('Department', departmentSchema);
 export default Department;
