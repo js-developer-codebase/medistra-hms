@@ -17,7 +17,7 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 }
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <SessionProvider>
         <ToastProvider>{children}</ToastProvider>
       </SessionProvider>
