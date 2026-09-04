@@ -12,6 +12,13 @@ export interface IStaff extends Document {
   phone?: string;
   emergencyContact?: string;
   status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
+  salary?: number; // Monthly base compensation in ₹
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  panNumber?: string;
+  aadhaarNumber?: string;
+  address?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,6 +77,34 @@ const staffSchema = new Schema<IStaff>(
       type: String,
       enum: ["ACTIVE", "INACTIVE", "ON_LEAVE"],
       default: "ACTIVE",
+    },
+    salary: {
+      type: Number,
+      default: 35000,
+    },
+    bankName: {
+      type: String,
+      trim: true,
+    },
+    accountNumber: {
+      type: String,
+      trim: true,
+    },
+    ifscCode: {
+      type: String,
+      trim: true,
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+    },
+    aadhaarNumber: {
+      type: String,
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
     },
   },
   { timestamps: true }

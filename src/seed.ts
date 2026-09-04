@@ -18,6 +18,15 @@ import BloodInventory from "./models/blood-inventory.model";
 import InventoryItem from "./models/inventory-item.model";
 import InventoryCategory from "./models/inventory-category.model";
 import ProcurementSupplier from "./models/procurement-supplier.model";
+import Staff from "./models/staff.model";
+import Shift from "./models/shift.model";
+import Attendance from "./models/attendance.model";
+import Leave from "./models/leave.model";
+import StaffDocument from "./models/staff-document.model";
+import NotificationTemplate from "./models/notification-template.model";
+import NotificationRule from "./models/notification-rule.model";
+import NotificationSetting from "./models/notification-setting.model";
+import NotificationLog from "./models/notification-log.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -608,6 +617,11 @@ async function seedDatabase() {
         await MedicineCategory.deleteMany({});
         await Medicine.deleteMany({});
         await PharmacySupplier.deleteMany({});
+        await Staff.deleteMany({});
+        await Shift.deleteMany({});
+        await Attendance.deleteMany({});
+        await Leave.deleteMany({});
+        await StaffDocument.deleteMany({});
 
         // 1. Seed Menus
         console.log("Seeding menus...");
@@ -920,6 +934,409 @@ async function seedDatabase() {
             await ProcurementSupplier.create(sup);
         }
         console.log(`✅ Successfully seeded Procurement approved hospital suppliers.`);
+
+        // 11. Seed Representative Staff, Shifts, Attendance, Leaves & Compliance Documents
+        console.log("Seeding representative Staff & HR records...");
+        const staffRoles = await Role.find({ role: { $in: ["NURSE", "PHARMACIST", "LAB_TECHNICIAN", "RECEPTIONIST", "BILLING_OFFICER"] } }).lean();
+        const roleMap: Record<string, any> = {};
+        staffRoles.forEach((r: any) => { roleMap[r.role] = r._id; });
+
+        const designationsList = await Designation.find().lean();
+        const desigMap: Record<string, any> = {};
+        designationsList.forEach((d: any) => { desigMap[d.code] = d._id; });
+
+        const deptList = await Department.find().lean();
+        const dMap: Record<string, any> = {};
+        deptList.forEach((d: any) => { dMap[d.code] = d._id; });
+
+        const sampleStaffData = [
+            {
+                name: "Sister Priya Das",
+                email: "priya.das@medistra.hospital",
+                gender: "FEMALE",
+                employeeId: "EMP-1001",
+                role: "NURSE",
+                qualification: "B.Sc Nursing (Gold Medalist)",
+                departmentId: dMap["ICU"] || dMap["EMER"],
+                designationId: desigMap["HD-NRS"] || desigMap["STF-NRS"],
+                shift: "MORNING" as const,
+                phone: "+91 98311 22334",
+                emergencyContact: "+91 98311 22335",
+                salary: 55000,
+                bankName: "State Bank of India",
+                accountNumber: "30012345678",
+                ifscCode: "SBIN0001234",
+                panNumber: "ABCDE1234F",
+                aadhaarNumber: "2345 6789 0123",
+                address: "Salt Lake Sector II, Kolkata",
+                status: "ACTIVE" as const
+            },
+            {
+                name: "Brother Sourav Roy",
+                email: "sourav.roy@medistra.hospital",
+                gender: "MALE",
+                employeeId: "EMP-1002",
+                role: "NURSE",
+                qualification: "GNM / Critical Care Nursing",
+                departmentId: dMap["EMER"] || dMap["ICU"],
+                designationId: desigMap["STF-NRS"],
+                shift: "EVENING" as const,
+                phone: "+91 98322 33445",
+                emergencyContact: "+91 98322 33446",
+                salary: 42000,
+                bankName: "HDFC Bank",
+                accountNumber: "50100023456789",
+                ifscCode: "HDFC0000123",
+                panNumber: "BCDEF2345G",
+                aadhaarNumber: "3456 7890 1234",
+                address: "New Town Action Area 1, Kolkata",
+                status: "ACTIVE" as const
+            },
+            {
+                name: "Subhashis Mukherjee",
+                email: "subhashis.m@medistra.hospital",
+                gender: "MALE",
+                employeeId: "EMP-1003",
+                role: "PHARMACIST",
+                qualification: "M.Pharm (Pharmacology)",
+                departmentId: dMap["PHAR"],
+                designationId: desigMap["CHF-PHAR"] || desigMap["STF-PHAR"],
+                shift: "MORNING" as const,
+                phone: "+91 98333 44556",
+                emergencyContact: "+91 98333 44557",
+                salary: 68000,
+                bankName: "ICICI Bank",
+                accountNumber: "000205012345",
+                ifscCode: "ICIC0000002",
+                panNumber: "CDEFG3456H",
+                aadhaarNumber: "4567 8901 2345",
+                address: "Gariahat Road, South Kolkata",
+                status: "ACTIVE" as const
+            },
+            {
+                name: "Tanushree Mondal",
+                email: "tanushree.m@medistra.hospital",
+                gender: "FEMALE",
+                employeeId: "EMP-1004",
+                role: "LAB_TECHNICIAN",
+                qualification: "M.Sc Medical Lab Technology (MLT)",
+                departmentId: dMap["PATH"],
+                designationId: desigMap["SR-TECH"] || desigMap["LAB-TECH"],
+                shift: "MORNING" as const,
+                phone: "+91 98344 55667",
+                emergencyContact: "+91 98344 55668",
+                salary: 48000,
+                bankName: "Axis Bank",
+                accountNumber: "915020023456789",
+                ifscCode: "UTIB0000004",
+                panNumber: "DEFGH4567J",
+                aadhaarNumber: "5678 9012 3456",
+                address: "Dum Dum Cantonment, Kolkata",
+                status: "ACTIVE" as const
+            },
+            {
+                name: "Rohan Chatterjee",
+                email: "rohan.c@medistra.hospital",
+                gender: "MALE",
+                employeeId: "EMP-1005",
+                role: "BILLING_OFFICER",
+                qualification: "B.Com (Hons), Tally & Hospital ERP",
+                departmentId: dMap["GMED"] || dMap["EMER"],
+                designationId: desigMap["BILL-OFF"],
+                shift: "ROTATING" as const,
+                phone: "+91 98355 66778",
+                emergencyContact: "+91 98355 66779",
+                salary: 38000,
+                bankName: "Punjab National Bank",
+                accountNumber: "0014002100012345",
+                ifscCode: "PUNB0014000",
+                panNumber: "EFGHI5678K",
+                aadhaarNumber: "6789 0123 4567",
+                address: "Behala Chowrasta, Kolkata",
+                status: "ACTIVE" as const
+            }
+        ];
+
+        const defaultHashedPassword = await bcrypt.hash("Hospital@2026", 10);
+        for (const s of sampleStaffData) {
+            const user = await User.create({
+                name: s.name,
+                email: s.email,
+                password: defaultHashedPassword,
+                gender: s.gender,
+                phone: s.phone,
+                role: roleMap[s.role] || roleDocs["NURSE"]?._id || adminUser.role,
+                isActive: true
+            });
+
+            await Staff.create({
+                userId: user._id,
+                employeeId: s.employeeId,
+                departmentId: s.departmentId,
+                designationId: s.designationId,
+                role: s.role,
+                qualification: s.qualification,
+                shift: s.shift,
+                phone: s.phone,
+                emergencyContact: s.emergencyContact,
+                salary: s.salary,
+                bankName: s.bankName,
+                accountNumber: s.accountNumber,
+                ifscCode: s.ifscCode,
+                panNumber: s.panNumber,
+                aadhaarNumber: s.aadhaarNumber,
+                address: s.address,
+                status: s.status
+            });
+
+            // Biometric attendance for today
+            await Attendance.create({
+                userId: user._id,
+                date: new Date(),
+                clockIn: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                shiftType: s.shift,
+                status: "PRESENT",
+                workingHours: 8,
+                location: "Block A Biometric Terminal",
+                verifiedBy: "Biometric Auto-Sync"
+            });
+
+            // Staff compliance document
+            await StaffDocument.create({
+                userId: user._id,
+                documentType: s.role === "NURSE" ? "MEDICAL_LICENSE" : "DEGREE_CERTIFICATE",
+                title: s.role === "NURSE" ? "State Nursing Council Registration" : "Degree Qualification Certificate",
+                documentNumber: `REG-${s.employeeId}`,
+                fileUrl: "/documents/sample-credentials.pdf",
+                issueDate: new Date("2024-01-15"),
+                expiryDate: new Date("2028-12-31"),
+                verificationStatus: "VERIFIED",
+                notes: "Verified against statutory portal"
+            });
+        }
+        console.log(`✅ Successfully seeded ${sampleStaffData.length} Staff & HR employee dossiers with biometric attendance & compliance documents.`);
+
+        // 12. Seed Standard Hospital Notification Templates, Rules, Settings & Delivery Logs
+        console.log("Seeding Hospital Notification Templates, Rules & Gateway Settings...");
+        const sampleTemplates = [
+            {
+                name: "Appointment Booking Confirmation",
+                type: "SMS" as const,
+                category: "APPOINTMENT" as const,
+                content: "Dear {{patientName}}, your appointment with Dr. {{doctorName}} ({{department}}) is confirmed on {{appointmentDate}} at {{appointmentTime}}. Token #{{tokenNumber}}. - Medistra Hospital",
+                variables: ["patientName", "doctorName", "department", "appointmentDate", "appointmentTime", "tokenNumber"],
+                dltTemplateId: "1107161829304859",
+                isActive: true
+            },
+            {
+                name: "Appointment Detailed Confirmation",
+                type: "EMAIL" as const,
+                category: "APPOINTMENT" as const,
+                subject: "Confirmed: Your Medical Consultation at Medistra Hospital",
+                content: "Dear {{patientName}},\n\nYour appointment has been successfully scheduled.\n\nDoctor: Dr. {{doctorName}}\nSpeciality: {{department}}\nDate & Time: {{appointmentDate}} at {{appointmentTime}}\nConsultation Fee: ₹{{consultationFee}}\n\nPlease arrive 15 minutes prior to your time slot.\n\nWarm regards,\nMedistra Super Speciality Hospital",
+                variables: ["patientName", "doctorName", "department", "appointmentDate", "appointmentTime", "consultationFee"],
+                isActive: true
+            },
+            {
+                name: "OPD Token Queue Call",
+                type: "SMS" as const,
+                category: "APPOINTMENT" as const,
+                content: "Alert: Token #{{tokenNumber}} for {{patientName}}. Please report to {{roomNumber}}, Dr. {{doctorName}} is ready for consultation. - Medistra Hospital",
+                variables: ["tokenNumber", "patientName", "roomNumber", "doctorName"],
+                dltTemplateId: "1107161829304860",
+                isActive: true
+            },
+            {
+                name: "Inpatient Admission Intimation",
+                type: "SMS" as const,
+                category: "ADMISSION" as const,
+                content: "Medistra IPD: Patient {{patientName}} has been admitted to Ward: {{wardName}}, Bed: {{bedNumber}} under Dr. {{attendingDoctor}}. IPD #{{ipdNumber}}.",
+                variables: ["patientName", "wardName", "bedNumber", "attendingDoctor", "ipdNumber"],
+                dltTemplateId: "1107161829304861",
+                isActive: true
+            },
+            {
+                name: "Laboratory Test Report Ready",
+                type: "SMS" as const,
+                category: "LAB_RESULT" as const,
+                content: "Dear {{patientName}}, your laboratory test report for {{testName}} is verified & ready. Download from patient portal or collect from Central Desk. - Medistra Lab",
+                variables: ["patientName", "testName"],
+                dltTemplateId: "1107161829304862",
+                isActive: true
+            },
+            {
+                name: "Hospital Invoice & Receipt Notification",
+                type: "EMAIL" as const,
+                category: "BILLING" as const,
+                subject: "Invoice Receipt: Medistra Hospital Inpatient / Outpatient Services",
+                content: "Dear {{patientName}},\n\nThank you for choosing Medistra Super Speciality Hospital.\n\nInvoice Number: {{invoiceNumber}}\nTotal Bill Amount: ₹{{totalAmount}}\nAmount Paid: ₹{{paidAmount}}\nOutstanding Due: ₹{{balanceDue}}\n\nYou can download the tax invoice slip from our online billing portal.\n\nAccounts & Billing Department,\nMedistra Hospital",
+                variables: ["patientName", "invoiceNumber", "totalAmount", "paidAmount", "balanceDue"],
+                isActive: true
+            },
+            {
+                name: "Emergency Code Red Trauma Alert",
+                type: "SYSTEM" as const,
+                category: "EMERGENCY" as const,
+                content: "EMERGENCY ALERT: Trauma team required immediately in ER Bay 1. Triage Level 1 (Resuscitation) incoming patient. Trauma protocol activated.",
+                variables: ["bayNumber", "triageLevel"],
+                isActive: true
+            }
+        ];
+
+        const createdTemplates: any[] = [];
+        for (const t of sampleTemplates) {
+            const existing = await NotificationTemplate.findOne({ name: t.name });
+            if (!existing) {
+                const created = await NotificationTemplate.create(t);
+                createdTemplates.push(created);
+            } else {
+                createdTemplates.push(existing);
+            }
+        }
+        console.log(`✅ Seeded ${createdTemplates.length} standard Hospital Notification Templates.`);
+
+        // Notification Rules
+        const sampleRules = [
+            {
+                name: "Outpatient Booking Notification",
+                triggerEvent: "APPOINTMENT_BOOKED" as const,
+                channels: ["SMS", "EMAIL"] as ("SMS" | "EMAIL")[],
+                recipientRoles: ["PATIENT", "DOCTOR"] as ("PATIENT" | "DOCTOR")[],
+                templateId: createdTemplates[0]?._id,
+                description: "Automatically dispatches SMS token & Email confirmation whenever an OPD appointment is confirmed.",
+                isActive: true
+            },
+            {
+                name: "Emergency Trauma Broadcast",
+                triggerEvent: "EMERGENCY_ALERT" as const,
+                channels: ["SMS", "SYSTEM", "PUSH"] as ("SMS" | "SYSTEM" | "PUSH")[],
+                recipientRoles: ["DOCTOR", "STAFF"] as ("DOCTOR" | "STAFF")[],
+                templateId: createdTemplates[6]?._id,
+                description: "Immediate hospital-wide alert broadcast to emergency on-duty physicians and trauma nurses.",
+                isActive: true
+            },
+            {
+                name: "Diagnostic Lab Verification Notice",
+                triggerEvent: "LAB_REPORT_READY" as const,
+                channels: ["SMS", "EMAIL"] as ("SMS" | "EMAIL")[],
+                recipientRoles: ["PATIENT", "DOCTOR"] as ("PATIENT" | "DOCTOR")[],
+                templateId: createdTemplates[4]?._id,
+                description: "Alerts patient and ordering doctor when lab results are verified by the biochemist/pathologist.",
+                isActive: true
+            },
+            {
+                name: "IPD Admission Intimation",
+                triggerEvent: "PATIENT_ADMITTED" as const,
+                channels: ["SMS", "EMAIL"] as ("SMS" | "EMAIL")[],
+                recipientRoles: ["PATIENT", "ADMIN"] as ("PATIENT" | "ADMIN")[],
+                templateId: createdTemplates[3]?._id,
+                description: "Sends admission notice with ward and bed allocation details upon bed assignment.",
+                isActive: true
+            },
+            {
+                name: "Financial Invoice Billing Alert",
+                triggerEvent: "INVOICE_GENERATED" as const,
+                channels: ["SMS", "EMAIL"] as ("SMS" | "EMAIL")[],
+                recipientRoles: ["PATIENT"] as ("PATIENT")[],
+                templateId: createdTemplates[5]?._id,
+                description: "Transmits computerized invoice receipt and payment confirmation in Indian Rupees.",
+                isActive: true
+            }
+        ];
+
+        for (const r of sampleRules) {
+            const existingRule = await NotificationRule.findOne({ name: r.name });
+            if (!existingRule) {
+                await NotificationRule.create(r);
+            }
+        }
+        console.log(`✅ Seeded ${sampleRules.length} Automated Hospital Notification Rules.`);
+
+        // Notification Settings
+        const existingSettings = await NotificationSetting.findOne();
+        if (!existingSettings) {
+            await NotificationSetting.create({
+                smsProvider: "FAST2SMS",
+                smsApiKey: "DEMO_FAST2SMS_KEY_MEDISTRA",
+                smsSenderId: "MEDSTR",
+                smsDltEntityId: "1101234567890",
+                smsCostPerCredit: 0.2, // ₹0.20
+                smsBalanceCredits: 4850,
+                emailProvider: "SMTP",
+                smtpHost: "smtp.medistra.in",
+                smtpPort: 587,
+                smtpUser: "notifications@medistra.in",
+                emailFromName: "Medistra Super Speciality Hospital",
+                emailFromAddress: "noreply@medistra.in",
+                systemAlertSound: true,
+                autoRetryFailed: true,
+                maxRetryCount: 3
+            });
+            console.log(`✅ Seeded default Notification Gateway Configuration (₹0.20/SMS, 4850 credits).`);
+        }
+
+        // Seed Sample Delivery Logs for Audit & History
+        const sampleLogsCount = await NotificationLog.countDocuments();
+        if (sampleLogsCount === 0) {
+            await NotificationLog.create([
+                {
+                    recipientName: "Amitabh Banerjee",
+                    recipientPhone: "+91 98300 12345",
+                    type: "SMS",
+                    content: "Dear Amitabh Banerjee, your appointment with Dr. Subhash Chandra (Cardiology) is confirmed on 04-Sep-2026 at 10:30 AM. Token #A-14. - Medistra Hospital",
+                    status: "DELIVERED",
+                    cost: 0.2,
+                    sentAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    deliveredAt: new Date(Date.now() - 2 * 60 * 60 * 1000 + 4000),
+                    metadata: { segments: 1, senderId: "MEDSTR" }
+                },
+                {
+                    recipientName: "Smt. Sunita Mukherjee",
+                    recipientEmail: "sunita.mukherjee@gmail.com",
+                    type: "EMAIL",
+                    subject: "Confirmed: Your Medical Consultation at Medistra Hospital",
+                    content: "Dear Sunita Mukherjee,\nYour appointment with Dr. Subhash Chandra is confirmed for tomorrow 11:00 AM.",
+                    status: "DELIVERED",
+                    cost: 0,
+                    sentAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                    deliveredAt: new Date(Date.now() - 4 * 60 * 60 * 1000 + 12000),
+                    metadata: { priority: "NORMAL", from: "Medistra Hospital <noreply@medistra.in>" }
+                },
+                {
+                    recipientName: "Rajesh Sharma",
+                    recipientPhone: "+91 98311 99887",
+                    type: "SMS",
+                    content: "Dear Rajesh Sharma, your laboratory test report for Complete Blood Count (CBC) is verified & ready. - Medistra Lab",
+                    status: "DELIVERED",
+                    cost: 0.2,
+                    sentAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    deliveredAt: new Date(Date.now() - 6 * 60 * 60 * 1000 + 3500),
+                    metadata: { segments: 1, senderId: "MEDSTR" }
+                },
+                {
+                    recipientName: "Dr. Anirban Sengupta",
+                    type: "SYSTEM",
+                    content: "EMERGENCY ALERT: Trauma team required immediately in ER Bay 1. Triage Level 1 incoming patient.",
+                    status: "DELIVERED",
+                    cost: 0,
+                    sentAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
+                    deliveredAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
+                    metadata: { severity: "CRITICAL" }
+                },
+                {
+                    recipientName: "Vikram Malhotra",
+                    recipientPhone: "+91 98300 00000",
+                    type: "SMS",
+                    content: "Medistra IPD: Patient Vikram Malhotra has been admitted to Ward: ICU-A, Bed: BED-04.",
+                    status: "FAILED",
+                    cost: 0.2,
+                    error: "Carrier Error: Mobile subscriber unreachable / switch off (Network code 21)",
+                    sentAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    metadata: { segments: 1, senderId: "MEDSTR" }
+                }
+            ]);
+            console.log(`✅ Seeded 5 initial Notification Delivery Logs for audit & tracking.`);
+        }
 
         console.log("\n🎉 Complete database seeding finished successfully!");
     } catch (error) {

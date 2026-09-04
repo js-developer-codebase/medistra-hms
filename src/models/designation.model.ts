@@ -6,6 +6,9 @@ export interface IDesignation extends Document {
   department?: string;
   level?: string;
   description?: string;
+  salaryMin?: number; // Monthly pay scale minimum in ₹
+  salaryMax?: number; // Monthly pay scale maximum in ₹
+  requirements?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +39,18 @@ const designationSchema = new Schema<IDesignation>(
       default: "Mid-Level",
     },
     description: {
+      type: String,
+      trim: true,
+    },
+    salaryMin: {
+      type: Number,
+      default: 25000,
+    },
+    salaryMax: {
+      type: Number,
+      default: 60000,
+    },
+    requirements: {
       type: String,
       trim: true,
     },
