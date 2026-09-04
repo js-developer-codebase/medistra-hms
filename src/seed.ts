@@ -27,6 +27,11 @@ import NotificationTemplate from "./models/notification-template.model";
 import NotificationRule from "./models/notification-rule.model";
 import NotificationSetting from "./models/notification-setting.model";
 import NotificationLog from "./models/notification-log.model";
+import UserSession from "./models/user-session.model";
+import AccessPolicy from "./models/access-policy.model";
+import OrganizationSetting from "./models/organization-setting.model";
+import HospitalSetting from "./models/hospital-setting.model";
+import BranchSetting from "./models/branch-setting.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -699,8 +704,19 @@ async function seedDatabase() {
             organizationType: "HOSPITAL",
             branchType: "MAIN",
             email: "info@medistra.hospital",
-            phone: "+91 11 2345 6789",
+            phone: "+91 33 2345 6789",
             address: "12 Medical Enclave, Central Avenue, Kolkata",
+            city: "Kolkata",
+            state: "West Bengal",
+            pincode: "700001",
+            country: "India",
+            capacity: 450,
+            metadata: {
+                nabhAccredited: true,
+                emergencyBeds: 35,
+                icuBeds: 60,
+                operatingTheatres: 12
+            },
             isActive: true
         });
         console.log(`✅ Successfully seeded organization: ${defaultOrg.organizationName}`);
@@ -1336,6 +1352,209 @@ async function seedDatabase() {
                 }
             ]);
             console.log(`✅ Seeded 5 initial Notification Delivery Logs for audit & tracking.`);
+        }
+
+        // 13. Seed Administration Access Policies & Active User Sessions
+        console.log("Seeding Hospital Administration Access Policies & Sessions...");
+        const existingPolicy = await AccessPolicy.findOne();
+        if (!existingPolicy) {
+            await AccessPolicy.create({
+                passwordMinLength: 8,
+                passwordRequireSpecial: true,
+                passwordRequireNumbers: true,
+                passwordRequireUppercase: true,
+                passwordExpiryDays: 90,
+                sessionTimeoutMinutes: 30,
+                maxConcurrentSessions: 3,
+                maxFailedAttempts: 5,
+                lockoutDurationMinutes: 15,
+                mfaPolicy: "ADMIN_ONLY",
+                ipWhitelist: ["192.168.1.0/24", "10.0.0.0/16", "127.0.0.1"],
+                auditLevel: "DETAILED"
+            });
+            console.log(`✅ Seeded default Hospital Security & Access Policies.`);
+        }
+
+        const existingSessionsCount = await UserSession.countDocuments();
+        if (existingSessionsCount === 0) {
+            const adminUser = await User.findOne({ email: DEFAULT_ADMIN_EMAIL }).lean();
+            const doctorUsers = await User.find({ email: { $ne: DEFAULT_ADMIN_EMAIL } }).limit(3).lean();
+
+            const sampleSessions: any[] = [];
+            if (adminUser) {
+                sampleSessions.push({
+                    userId: adminUser._id,
+                    token: "sess_admin_super_live_token_9918",
+                    ipAddress: "192.168.1.10",
+                    device: "Workstation Terminal",
+                    browser: "Chrome 128",
+                    os: "Windows 11 Enterprise",
+                    location: "Kolkata Hospital IT Wing",
+                    status: "ACTIVE",
+                    lastActiveAt: new Date(),
+                    expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000)
+                });
+            }
+
+            doctorUsers.forEach((u: any, idx: number) => {
+                sampleSessions.push({
+                    userId: u._id,
+                    token: `sess_clinician_token_${idx + 1}_4821`,
+                    ipAddress: `192.168.1.${20 + idx}`,
+                    device: idx === 1 ? "iPad Pro Clinical Console" : "OPD Room 104 PC",
+                    browser: idx === 1 ? "Mobile Safari 17.5" : "Chrome 128",
+                    os: idx === 1 ? "iPadOS 17.5" : "Windows 11",
+                    location: "Medistra Main Campus OPD",
+                    status: "ACTIVE",
+                    lastActiveAt: new Date(Date.now() - (idx + 1) * 20 * 60 * 1000),
+                    expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000)
+                });
+            });
+
+            if (sampleSessions.length > 0) {
+                await UserSession.create(sampleSessions);
+                console.log(`✅ Seeded ${sampleSessions.length} active administrative and clinician sessions.`);
+            }
+        }
+
+        // 14. Seed Organization Management Settings, Network Hospitals & Satellite Branches
+        console.log("Seeding Organization Settings & Network Facilities...");
+
+        // 14.1 Network Hospitals & Satellite Branches
+        const cancerHospital = await Organization.findOneAndUpdate(
+            { organizationId: "MEDISTRA-ONCO" },
+            {
+                organizationName: "Medistra Comprehensive Cancer Center",
+                organizationId: "MEDISTRA-ONCO",
+                organizationType: "HOSPITAL",
+                branchType: "BRANCH",
+                email: "onco@medistra.hospital",
+                phone: "+91 33 2410 5000",
+                address: "Plot IIE/12, Action Area II, New Town, Kolkata",
+                city: "Kolkata",
+                state: "West Bengal",
+                pincode: "700156",
+                country: "India",
+                capacity: 220,
+                metadata: {
+                    specialty: "Comprehensive Oncology & Bone Marrow Transplant",
+                    nabhAccredited: true,
+                    linearAccelerators: 3,
+                    chemoDaycareChairs: 40
+                },
+                isActive: true
+            },
+            { upsert: true, new: true }
+        );
+
+        const saltLakeBranch = await Organization.findOneAndUpdate(
+            { organizationId: "MEDISTRA-SL-01" },
+            {
+                organizationName: "Medistra Polyclinic & Day Surgery - Salt Lake",
+                organizationId: "MEDISTRA-SL-01",
+                organizationType: "CLINIC",
+                branchType: "BRANCH",
+                email: "saltlake@medistra.hospital",
+                phone: "+91 33 2358 1122",
+                address: "Block BD-34, Sector 1, Salt Lake, Kolkata",
+                city: "Kolkata",
+                state: "West Bengal",
+                pincode: "700064",
+                country: "India",
+                capacity: 25,
+                metadata: {
+                    facilityType: "Satellite Polyclinic & Specimen Collection",
+                    consultationSuites: 8,
+                    ultrasoundRooms: 2
+                },
+                isActive: true
+            },
+            { upsert: true, new: true }
+        );
+
+        await Organization.findOneAndUpdate(
+            { organizationId: "MEDISTRA-NT-02" },
+            {
+                organizationName: "Medistra Diagnostic & Dialysis Center - New Town",
+                organizationId: "MEDISTRA-NT-02",
+                organizationType: "DIAGNOSTIC",
+                branchType: "BRANCH",
+                email: "newtown@medistra.hospital",
+                phone: "+91 33 2986 4400",
+                address: "Axis Mall Tower, 3rd Floor, Major Arterial Road, New Town, Kolkata",
+                city: "Kolkata",
+                state: "West Bengal",
+                pincode: "700156",
+                country: "India",
+                capacity: 35,
+                metadata: {
+                    facilityType: "Dialysis & Diagnostic Imaging",
+                    dialysisStations: 16
+                },
+                isActive: true
+            },
+            { upsert: true, new: true }
+        );
+
+        // 14.2 Corporate Organization Legal & Financial Settings (INR / ₹)
+        const existingOrgSetting = await OrganizationSetting.findOne();
+        if (!existingOrgSetting) {
+            await OrganizationSetting.create({
+                cinNumber: "U85110WB2018PTC224890",
+                panNumber: "AAACM8912P",
+                gstin: "19AAACM8912P1ZV",
+                currency: "INR",
+                currencySymbol: "₹",
+                fiscalYearStart: "April",
+                fiscalYearEnd: "March",
+                tagline: "Centre of Excellence in Tertiary & Quaternary Healthcare",
+                website: "https://medistra.hospital",
+                emergencyHotline: "+91 33 2345 6780",
+                letterheadHeader: "MEDISTRA HEALTHCARE SYSTEM - TRUSTED CLINICAL EXCELLENCE",
+                letterheadFooter: "12 Medical Enclave, Central Avenue, Kolkata | 24x7 Helpline: 1800-200-8899"
+            });
+            console.log(`✅ Seeded Corporate Organization Legal, Tax & Financial Settings (₹ / INR).`);
+        }
+
+        // 14.3 Hospital Operational & NABH Settings
+        const existingHospSetting = await HospitalSetting.findOne();
+        if (!existingHospSetting) {
+            await HospitalSetting.create({
+                hospitalId: defaultOrg._id,
+                nabhAccredited: true,
+                nabhCode: "NABH-2024-HOSP-0982",
+                jciAccredited: true,
+                totalBeds: 450,
+                icuBeds: 60,
+                nicuBeds: 24,
+                otSuites: 12,
+                bloodBankLicense: "DL-BB-WB-2022-04",
+                pharmacyLicense: "WB/KOL/20/21B/4921",
+                ambulanceHotline: "+91 33 2345 6789",
+                casualtyPhone: "+91 33 2345 6701",
+                visitingHours: "04:30 PM - 07:00 PM",
+                dischargeCheckTime: "11:00 AM"
+            });
+            console.log(`✅ Seeded Main Hospital Operational Parameters & NABH Credentials.`);
+        }
+
+        // 14.4 Branch Logistics & Operational Settings
+        const existingBranchSetting = await BranchSetting.findOne({ branchCode: "BR-SL-01" });
+        if (!existingBranchSetting) {
+            await BranchSetting.create({
+                branchId: saltLakeBranch._id,
+                branchCode: "BR-SL-01",
+                operatingHours: "07:00 AM - 09:00 PM (All 7 Days)",
+                consultationRooms: 8,
+                dayCareBeds: 10,
+                hasPharmacy: true,
+                hasSampleCollection: true,
+                sampleCourierSchedule: "Twice Daily (11:30 AM & 04:30 PM)",
+                teleconsultationEnabled: true,
+                branchManager: "Mr. Debabrata Sen",
+                branchManagerPhone: "+91 98310 99881"
+            });
+            console.log(`✅ Seeded Satellite Branch Operational & Logistics Settings.`);
         }
 
         console.log("\n🎉 Complete database seeding finished successfully!");
