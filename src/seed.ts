@@ -1114,7 +1114,7 @@ async function seedDatabase() {
                 userId: user._id,
                 date: new Date(),
                 clockIn: new Date(Date.now() - 4 * 60 * 60 * 1000),
-                shiftType: s.shift,
+                shiftType: s.shift || "MORNING",
                 status: "PRESENT",
                 workingHours: 8,
                 location: "Block A Biometric Terminal",

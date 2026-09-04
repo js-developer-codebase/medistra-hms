@@ -5,7 +5,7 @@ export interface IAttendance extends Document {
   date: Date;
   clockIn: Date;
   clockOut?: Date;
-  shiftType: "MORNING" | "EVENING" | "NIGHT" | "GENERAL";
+  shiftType: "MORNING" | "EVENING" | "NIGHT" | "GENERAL" | "ROTATING";
   status: "PRESENT" | "LATE" | "HALF_DAY" | "ABSENT" | "ON_LEAVE";
   workingHours?: number;
   location?: string;
@@ -37,7 +37,7 @@ const attendanceSchema = new Schema<IAttendance>(
     },
     shiftType: {
       type: String,
-      enum: ["MORNING", "EVENING", "NIGHT", "GENERAL"],
+      enum: ["MORNING", "EVENING", "NIGHT", "GENERAL", "ROTATING"],
       default: "MORNING",
     },
     status: {

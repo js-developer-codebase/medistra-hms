@@ -478,6 +478,7 @@ export default function HRAttendancePage() {
                   <option value="EVENING">Evening</option>
                   <option value="NIGHT">Night</option>
                   <option value="GENERAL">General</option>
+                  <option value="ROTATING">Rotating</option>
                 </select>
               </div>
               <div className="space-y-1">
