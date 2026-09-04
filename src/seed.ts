@@ -13,6 +13,8 @@ import RadiologyProcedure from "./models/radiology-procedure.model";
 import MedicineCategory from "./models/medicine-category.model";
 import Medicine from "./models/medicine.model";
 import PharmacySupplier from "./models/pharmacy-supplier.model";
+import BloodDonor from "./models/blood-donor.model";
+import BloodInventory from "./models/blood-inventory.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -501,6 +503,15 @@ const INVENTORY_MANAGER_ACCESS = [
     { moduleName: "inventory", permissions: ["inventory.stock.view", "inventory.stock.receive", "inventory.stock.issue", "inventory.stock.transfer", "inventory.stock.adjust"] }
 ];
 
+const BLOOD_BANK_TECHNICIAN_ACCESS = [
+    { moduleName: "blood-bank", permissions: ["blood-bank.donor.view", "blood-bank.donor.create", "blood-bank.collection.create", "blood-bank.testing.create", "blood-bank.crossmatch.create", "blood-bank.inventory.view", "blood-bank.issue.create"] }
+];
+
+const BLOOD_BANK_MANAGER_ACCESS = [
+    ...BLOOD_BANK_TECHNICIAN_ACCESS,
+    { moduleName: "blood-bank", permissions: ["blood-bank.donor.update", "blood-bank.inventory.adjust", "blood-bank.issue.approve", "blood-bank.reports.view"] }
+];
+
 const roleDefinitions = [
     // PLATFORM LEVEL
     { role: "SYSTEM_SUPER_ADMIN", access: FULL_ACCESS },
@@ -566,8 +577,8 @@ const roleDefinitions = [
     { role: "OT_MANAGER", access: FULL_ACCESS },
     
     // BLOOD BANK
-    { role: "BLOOD_BANK_TECHNICIAN", access: [] },
-    { role: "BLOOD_BANK_MANAGER", access: [] },
+    { role: "BLOOD_BANK_TECHNICIAN", access: BLOOD_BANK_TECHNICIAN_ACCESS },
+    { role: "BLOOD_BANK_MANAGER", access: BLOOD_BANK_MANAGER_ACCESS },
     
     // INSURANCE
     { role: "INSURANCE_OFFICER", access: [] },
@@ -826,6 +837,37 @@ async function seedDatabase() {
             await Medicine.create(med);
         }
         console.log(`✅ Successfully seeded pharmacy catalog with essential medicines.`);
+
+        // 8. Seed Blood Bank Reference Donors & Inventory
+        console.log("Seeding Blood Bank reference donors & inventory...");
+        await BloodDonor.deleteMany({});
+        await BloodInventory.deleteMany({});
+
+        const sampleDonors = [
+            { donorCode: "DNR-20260904-101", firstName: "Rahul", lastName: "Sharma", fullName: "Rahul Sharma", gender: "Male", age: 29, bloodGroup: "O+", contactNumber: "+91 98765 43210", email: "rahul.sharma@example.com", weight: 72, hemoglobin: 14.8, bloodPressure: "120/80", pulse: 72, donationCount: 4, eligibilityStatus: "ELIGIBLE", isVoluntary: true, address: "Sector 14, Rohini", city: "New Delhi" },
+            { donorCode: "DNR-20260904-102", firstName: "Pooja", lastName: "Verma", fullName: "Pooja Verma", gender: "Female", age: 26, bloodGroup: "A+", contactNumber: "+91 98112 34567", email: "pooja.verma@example.com", weight: 58, hemoglobin: 13.2, bloodPressure: "118/76", pulse: 76, donationCount: 2, eligibilityStatus: "ELIGIBLE", isVoluntary: true, address: "Saket, South Delhi", city: "New Delhi" },
+            { donorCode: "DNR-20260904-103", firstName: "Amit", lastName: "Patel", fullName: "Amit Patel", gender: "Male", age: 34, bloodGroup: "B+", contactNumber: "+91 99887 65432", email: "amit.patel@example.com", weight: 78, hemoglobin: 15.0, bloodPressure: "122/82", pulse: 70, donationCount: 5, eligibilityStatus: "ELIGIBLE", isVoluntary: true, address: "Dwarka Sector 9", city: "New Delhi" },
+            { donorCode: "DNR-20260904-104", firstName: "Ananya", lastName: "Iyer", fullName: "Ananya Iyer", gender: "Female", age: 31, bloodGroup: "AB+", contactNumber: "+91 97654 32109", email: "ananya.iyer@example.com", weight: 62, hemoglobin: 13.6, bloodPressure: "116/74", pulse: 74, donationCount: 3, eligibilityStatus: "ELIGIBLE", isVoluntary: true, address: "Vasant Kunj", city: "New Delhi" },
+            { donorCode: "DNR-20260904-105", firstName: "Vikas", lastName: "Malhotra", fullName: "Vikas Malhotra", gender: "Male", age: 40, bloodGroup: "O-", contactNumber: "+91 98234 56789", email: "vikas.m@example.com", weight: 80, hemoglobin: 14.5, bloodPressure: "124/80", pulse: 68, donationCount: 8, eligibilityStatus: "ELIGIBLE", isVoluntary: true, address: "Mayur Vihar Phase 1", city: "New Delhi" }
+        ];
+
+        for (const d of sampleDonors) {
+            await BloodDonor.create(d);
+        }
+
+        const sampleInventory = [
+            { bagNumber: "BAG-20260904-001", bloodGroup: "O+", componentType: "PRBC", volumeMl: 350, unitsAvailable: 1, storageLocation: "Blood Refrigerator 1 (2-6°C)", collectionDate: new Date(), expiryDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 1450, status: "AVAILABLE" },
+            { bagNumber: "BAG-20260904-002", bloodGroup: "A+", componentType: "PRBC", volumeMl: 350, unitsAvailable: 1, storageLocation: "Blood Refrigerator 1 (2-6°C)", collectionDate: new Date(), expiryDate: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 1450, status: "AVAILABLE" },
+            { bagNumber: "BAG-20260904-003", bloodGroup: "B+", componentType: "PRBC", volumeMl: 350, unitsAvailable: 1, storageLocation: "Blood Refrigerator 1 (2-6°C)", collectionDate: new Date(), expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 1450, status: "AVAILABLE" },
+            { bagNumber: "BAG-20260904-004", bloodGroup: "AB+", componentType: "FFP", volumeMl: 200, unitsAvailable: 1, storageLocation: "Deep Freezer -40°C", collectionDate: new Date(), expiryDate: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 1200, status: "AVAILABLE" },
+            { bagNumber: "BAG-20260904-005", bloodGroup: "O-", componentType: "PRBC", volumeMl: 350, unitsAvailable: 1, storageLocation: "Blood Refrigerator 2 (2-6°C)", collectionDate: new Date(), expiryDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 1800, status: "AVAILABLE" },
+            { bagNumber: "BAG-20260904-006", bloodGroup: "O+", componentType: "PLATELETS", volumeMl: 60, unitsAvailable: 1, storageLocation: "Platelet Agitator (22°C)", collectionDate: new Date(), expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), ttiTestStatus: "TESTED_SAFE", processingFee: 2200, status: "AVAILABLE" }
+        ];
+
+        for (const inv of sampleInventory) {
+            await BloodInventory.create(inv);
+        }
+        console.log(`✅ Successfully seeded Blood Bank donors and certified inventory.`);
 
         console.log("\n🎉 Complete database seeding finished successfully!");
     } catch (error) {
