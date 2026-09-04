@@ -7,7 +7,8 @@ export async function GET(request: Request) {
         await dbConnect();
         const { searchParams } = new URL(request.url);
         const itemId = searchParams.get('itemId');
-        const transactions = await inventoryService.getStockTransactions(itemId || undefined);
+        const filter = itemId ? { itemId } : {};
+        const transactions = await inventoryService.getStockTransactions(filter);
         return NextResponse.json(transactions);
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch stock transactions" }, { status: 500 });

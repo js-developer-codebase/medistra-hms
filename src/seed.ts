@@ -15,6 +15,9 @@ import Medicine from "./models/medicine.model";
 import PharmacySupplier from "./models/pharmacy-supplier.model";
 import BloodDonor from "./models/blood-donor.model";
 import BloodInventory from "./models/blood-inventory.model";
+import InventoryItem from "./models/inventory-item.model";
+import InventoryCategory from "./models/inventory-category.model";
+import ProcurementSupplier from "./models/procurement-supplier.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -868,6 +871,55 @@ async function seedDatabase() {
             await BloodInventory.create(inv);
         }
         console.log(`✅ Successfully seeded Blood Bank donors and certified inventory.`);
+
+        // 9. Seed Inventory Categories & Consumables Catalog
+        console.log("Seeding Inventory reference categories & catalog items...");
+        await InventoryCategory.deleteMany({});
+        await InventoryItem.deleteMany({});
+
+        const defaultCategories = [
+            { code: "CAT-SURG", name: "Surgical Disposables & Consumables", description: "Sutures, surgical blades, disposable gowns, drapes, suction tips", itemCount: 2 },
+            { code: "CAT-ICU", name: "Critical Care & ICU Supplies", description: "Endotracheal tubes, central venous lines, arterial line sets, ventilator circuits", itemCount: 1 },
+            { code: "CAT-CONSUM", name: "General Ward Consumables", description: "IV cannulas, infusion sets, syringes, needles, alcohol swabs, adhesive tape", itemCount: 2 },
+            { code: "CAT-BIOMED", name: "Biomedical & Equipment Spares", description: "ECG cables, SpO2 sensors, NIBP cuffs, defibrillator pads, thermal paper", itemCount: 1 },
+            { code: "CAT-CSSD", name: "CSSD & Sterilization Packaging", description: "Bowie-Dick test packs, biological indicators, autoclave rolls, chemical indicators", itemCount: 1 }
+        ];
+
+        for (const cat of defaultCategories) {
+            await InventoryCategory.create(cat);
+        }
+
+        const defaultItems = [
+            { code: "ITM-1001", name: "Disposable Sterile Surgical Gloves (Size 7.5)", category: "Surgical Disposables & Consumables", unit: "Box of 100", unitPrice: 850, currentStock: 85, reorderLevel: 25, safetyStock: 15, storageLocation: "Central Warehouse - Rack A1", supplierName: "Ansell Healthcare", description: "Powder-free sterile latex gloves with textured grip." },
+            { code: "ITM-1002", name: "IV Cannula 20G with Injection Port", category: "General Ward Consumables", unit: "Box of 50", unitPrice: 420, currentStock: 120, reorderLevel: 30, safetyStock: 20, storageLocation: "Central Warehouse - Rack B2", supplierName: "Becton Dickinson (BD)", description: "PTFE radiopaque catheter with flashback chamber." },
+            { code: "ITM-1003", name: "Endotracheal Tube Cuffed 7.5mm", category: "Critical Care & ICU Supplies", unit: "Pack of 10", unitPrice: 650, currentStock: 35, reorderLevel: 15, safetyStock: 10, storageLocation: "ICU Satellite Store - Bin 3", supplierName: "Teleflex Medical", description: "High-volume low-pressure cuff with Murphy eye." },
+            { code: "ITM-1004", name: "Monocryl Suture 3-0 Reverse Cutting", category: "Surgical Disposables & Consumables", unit: "Box of 36", unitPrice: 2450, currentStock: 24, reorderLevel: 10, safetyStock: 8, storageLocation: "OT Sterile Sub-Store - Shelf 2", supplierName: "Ethicon Johnson & Johnson", description: "Absorbable synthetic monofilament suture." },
+            { code: "ITM-1005", name: "ECG Thermal Recording Paper 80mm", category: "Biomedical & Equipment Spares", unit: "Pack of 10", unitPrice: 380, currentStock: 45, reorderLevel: 15, safetyStock: 10, storageLocation: "Central Warehouse - Rack D1", supplierName: "Schiller Medical", description: "High-contrast thermal grid paper rolls for 12-lead ECG." },
+            { code: "ITM-1006", name: "Adult Oxygen Nasal Cannula with Tubing", category: "General Ward Consumables", unit: "Pack of 20", unitPrice: 280, currentStock: 90, reorderLevel: 25, safetyStock: 15, storageLocation: "Central Warehouse - Rack B1", supplierName: "Intersurgical", description: "Soft curved prongs with 2m crush-resistant star lumen tubing." },
+            { code: "ITM-1007", name: "CSSD Autoclave Sterilization Reel 15cm x 200m", category: "CSSD & Sterilization Packaging", unit: "Roll", unitPrice: 1250, currentStock: 18, reorderLevel: 5, safetyStock: 4, storageLocation: "CSSD Store - Rack 1", supplierName: "Wipak Medical", description: "Multi-layer laminate with steam chemical indicators." }
+        ];
+
+        for (const itm of defaultItems) {
+            await InventoryItem.create(itm);
+        }
+        console.log(`✅ Successfully seeded Inventory categories and essential hospital consumables.`);
+
+        // 10. Seed Procurement Approved Hospital Suppliers
+        console.log("Seeding Procurement approved hospital suppliers...");
+        await ProcurementSupplier.deleteMany({});
+        const defaultSuppliers = [
+            { code: "SUP-101", name: "Ansell Healthcare India Ltd", contactPerson: "Rajesh Kumar", phone: "+91 98201 11223", email: "orders.india@ansell.com", address: "Plot 14, MIDC Industrial Area, Mumbai, Maharashtra", gstin: "27AABCA1234F1Z1", panNumber: "AABCA1234F", paymentTerms: "NET_30", leadTimeDays: 4, categoriesSupplied: ["Surgical Disposables & Consumables", "PPE & Barrier Protection"], rating: 4.9, status: "ACTIVE", bankDetails: { bankName: "HDFC Bank", accountNumber: "50200012345678", ifscCode: "HDFC0000123" } },
+            { code: "SUP-102", name: "Becton Dickinson (BD) Medical", contactPerson: "Sunita Sharma", phone: "+91 98112 33445", email: "hospital.orders@bd.com", address: "DLF Cyber City, Tower B, Gurugram, Haryana", gstin: "06AABCB5678G1Z2", panNumber: "AABCB5678G", paymentTerms: "NET_45", leadTimeDays: 3, categoriesSupplied: ["General Ward Consumables", "Vascular Access", "Infusion Therapy"], rating: 4.8, status: "ACTIVE", bankDetails: { bankName: "Citibank India", accountNumber: "1002345678", ifscCode: "CITI0000003" } },
+            { code: "SUP-103", name: "Teleflex Medical Technologies", contactPerson: "Vikram Mehta", phone: "+91 98450 55667", email: "procure@teleflex.in", address: "Electronic City, Phase 1, Bangalore, Karnataka", gstin: "29AABCT9012H1Z3", panNumber: "AABCT9012H", paymentTerms: "NET_30", leadTimeDays: 5, categoriesSupplied: ["Critical Care & ICU Supplies", "Anesthesia & Respiratory"], rating: 4.7, status: "ACTIVE", bankDetails: { bankName: "ICICI Bank", accountNumber: "000205001234", ifscCode: "ICIC0000002" } },
+            { code: "SUP-104", name: "Ethicon Johnson & Johnson India", contactPerson: "Ananya Deshmukh", phone: "+91 98220 77889", email: "surgical.care@jnj.com", address: "LBS Marg, Mulund West, Mumbai, Maharashtra", gstin: "27AABCJ3456J1Z4", panNumber: "AABCJ3456J", paymentTerms: "NET_60", leadTimeDays: 4, categoriesSupplied: ["Surgical Disposables & Consumables", "Wound Closure & Sutures"], rating: 4.9, status: "ACTIVE", bankDetails: { bankName: "State Bank of India", accountNumber: "30012345678", ifscCode: "SBIN0000300" } },
+            { code: "SUP-105", name: "Schiller Healthcare India Pvt Ltd", contactPerson: "Deepak Patel", phone: "+91 98330 99001", email: "biomed.support@schillerindia.com", address: "Andheri East, MIDC, Mumbai, Maharashtra", gstin: "27AABCS7890K1Z5", panNumber: "AABCS7890K", paymentTerms: "NET_30", leadTimeDays: 6, categoriesSupplied: ["Biomedical & Equipment Spares", "Cardiology Diagnostics"], rating: 4.6, status: "ACTIVE", bankDetails: { bankName: "Axis Bank", accountNumber: "915020012345678", ifscCode: "UTIB0000004" } },
+            { code: "SUP-106", name: "Wipak Medical Packaging Solutions", contactPerson: "Kavita Rao", phone: "+91 98860 22334", email: "sales.india@wipak.com", address: "Peenya Industrial Area, Bangalore, Karnataka", gstin: "29AABCW1234L1Z6", panNumber: "AABCW1234L", paymentTerms: "NET_30", leadTimeDays: 5, categoriesSupplied: ["CSSD & Sterilization Packaging"], rating: 4.8, status: "ACTIVE", bankDetails: { bankName: "Standard Chartered", accountNumber: "22010012345", ifscCode: "SCBL0036001" } }
+        ];
+
+        for (const sup of defaultSuppliers) {
+            await ProcurementSupplier.create(sup);
+        }
+        console.log(`✅ Successfully seeded Procurement approved hospital suppliers.`);
 
         console.log("\n🎉 Complete database seeding finished successfully!");
     } catch (error) {

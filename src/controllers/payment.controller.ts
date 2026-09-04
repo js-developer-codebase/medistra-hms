@@ -12,11 +12,15 @@ export class PaymentController {
             await dbConnect();
             const data: CreatePaymentDto = await request.json();
 
-            if (!data.invoiceId || !data.patientId || data.amount === undefined || !data.method || !data.branchId) {
+            if (!data.invoiceId || !data.patientId || data.amount === undefined || !data.method) {
                 return NextResponse.json(
-                    { success: false, message: "Required fields are missing" },
+                    { success: false, message: "Required fields are missing: invoiceId, patientId, amount, method" },
                     { status: 400 }
                 );
+            }
+
+            if (data.branchId && !Types.ObjectId.isValid(data.branchId as string)) {
+                delete (data as any).branchId;
             }
 
             const payment = await this.paymentService.createPayment(data);
