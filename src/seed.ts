@@ -32,6 +32,9 @@ import AccessPolicy from "./models/access-policy.model";
 import OrganizationSetting from "./models/organization-setting.model";
 import HospitalSetting from "./models/hospital-setting.model";
 import BranchSetting from "./models/branch-setting.model";
+import AuditLog from "./models/audit-log.model";
+import SecurityEvent from "./models/security-event.model";
+import ComplianceReport from "./models/compliance-report.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -1555,6 +1558,466 @@ async function seedDatabase() {
                 branchManagerPhone: "+91 98310 99881"
             });
             console.log(`✅ Seeded Satellite Branch Operational & Logistics Settings.`);
+        }
+
+        // 15. Seed Audit & Compliance Records
+        console.log("Seeding Audit & Compliance baseline logs, security events & reports...");
+        const existingAuditCount = await AuditLog.countDocuments();
+        if (existingAuditCount === 0) {
+            const adminUserDoc = await User.findOne({ email: DEFAULT_ADMIN_EMAIL }).lean();
+            const doctorUserDoc = await User.findOne({ email: { $ne: DEFAULT_ADMIN_EMAIL } }).lean();
+            const patientDoc: any = await mongoose.model("Patient").findOne().lean();
+
+            const sampleAuditLogs: any[] = [
+                // 15.1 System & User Activity Logs
+                {
+                    user: adminUserDoc?._id,
+                    userName: adminUserDoc ? `${adminUserDoc.name}` : "Administrator",
+                    userRole: "SYSTEM_SUPER_ADMIN",
+                    action: "UPDATE_SECURITY_POLICY",
+                    entity: "SECURITY_POLICY",
+                    entityName: "Hospital Password & Session Policy",
+                    category: "SYSTEM",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Updated hospital security policy: password expiry set to 90 days, session timeout to 30 mins.",
+                    ipAddress: "192.168.1.10",
+                    device: "Terminal PC",
+                    location: "Kolkata IT Wing",
+                    complianceTags: ["ISO27001", "NABH"],
+                    createdAt: new Date(Date.now() - 36 * 60 * 60 * 1000)
+                },
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "CREATE_CONSULTATION",
+                    entity: "CLINICAL_RECORD",
+                    entityName: `Consultation for ${patientDoc ? patientDoc.firstName + ' ' + patientDoc.lastName : 'Rajat Sharma'}`,
+                    category: "USER_ACTIVITY",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Recorded OPD cardiology consultation notes, preliminary ECG review, and prescribed statins.",
+                    ipAddress: "192.168.1.25",
+                    device: "OPD Room 104 PC",
+                    location: "OPD Block A",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["NABH", "CLINICAL_GOVERNANCE"],
+                    createdAt: new Date(Date.now() - 28 * 60 * 60 * 1000)
+                },
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "DISPENSE_PRESCRIPTION",
+                    entity: "PHARMACY",
+                    entityName: "Rx #RX-2024-0491",
+                    category: "USER_ACTIVITY",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Inpatient pharmacy dispensed Ampicillin 500mg (10 capsules) and Paracetamol 650mg.",
+                    ipAddress: "192.168.1.105",
+                    device: "Pharmacy Terminal 2",
+                    location: "Main Lobby Pharmacy",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["DRUG_SCHEDULE_H", "NABH"],
+                    createdAt: new Date(Date.now() - 20 * 60 * 60 * 1000)
+                },
+                {
+                    user: adminUserDoc?._id,
+                    userName: "Billing Officer R. Das",
+                    userRole: "BILLING_OFFICER",
+                    action: "GENERATE_INVOICE",
+                    entity: "BILLING",
+                    entityName: "Invoice #INV-2024-0982",
+                    category: "USER_ACTIVITY",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Generated final inpatient discharge invoice of ₹48,500 with TPA cashless sanction linkage.",
+                    ipAddress: "192.168.1.42",
+                    device: "Cash Counter 1",
+                    location: "Admission & Billing Hub",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["GST_COMPLIANT", "FINANCIAL_AUDIT"],
+                    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000)
+                },
+
+                // 15.2 Login History & Authentication
+                {
+                    user: adminUserDoc?._id,
+                    userName: adminUserDoc ? `${adminUserDoc.name}` : "Administrator",
+                    userRole: "SYSTEM_SUPER_ADMIN",
+                    action: "LOGIN_SUCCESS",
+                    entity: "AUTHENTICATION",
+                    entityName: "Console Session",
+                    category: "LOGIN",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Administrative user authenticated successfully with valid credentials and corporate IP verification.",
+                    ipAddress: "192.168.1.10",
+                    device: "Chrome 128 / Windows 11",
+                    location: "Central Avenue, Kolkata",
+                    complianceTags: ["ACCESS_CONTROL", "ISO27001"],
+                    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000)
+                },
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "LOGIN_SUCCESS",
+                    entity: "AUTHENTICATION",
+                    entityName: "Clinician Session",
+                    category: "LOGIN",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Clinician mobile portal login via iPad Pro from hospital secure wireless intranet.",
+                    ipAddress: "192.168.1.25",
+                    device: "Mobile Safari / iPadOS 17",
+                    location: "Medistra Main Campus",
+                    complianceTags: ["ACCESS_CONTROL"],
+                    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                },
+                {
+                    userName: "Unknown Attacker",
+                    action: "LOGIN_FAILED",
+                    entity: "AUTHENTICATION",
+                    entityName: "Failed Login Trial",
+                    category: "LOGIN",
+                    severity: "WARNING",
+                    status: "FAILURE",
+                    details: "Failed login attempt with invalid password credentials targeting username admin@hospital.com.",
+                    ipAddress: "203.0.113.45",
+                    device: "Python-requests / Linux",
+                    location: "External Public IP",
+                    complianceTags: ["SECURITY_EVENT", "ISO27001"],
+                    createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000)
+                },
+                {
+                    userName: "Suspicious User",
+                    action: "LOGIN_BLOCKED",
+                    entity: "AUTHENTICATION",
+                    entityName: "Account Lockout Trigger",
+                    category: "LOGIN",
+                    severity: "HIGH",
+                    status: "BLOCKED",
+                    details: "Account lockout enforced after 5 consecutive failed authentication trials within 2 minutes.",
+                    ipAddress: "198.51.100.12",
+                    device: "Unknown Client",
+                    location: "External Public IP",
+                    complianceTags: ["SECURITY_EVENT", "INCIDENT"],
+                    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000)
+                },
+
+                // 15.3 Patient Data Access (PHI / EHR Chart Access)
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "VIEW_PHI_RECORD",
+                    entity: "PATIENT_RECORD",
+                    entityName: `EHR Chart of ${patientDoc ? patientDoc.firstName + ' ' + patientDoc.lastName : 'Rajat Sharma'}`,
+                    category: "DATA_ACCESS",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Consultant accessed comprehensive medical history, past allergies, and coronary CT angiogram findings.",
+                    ipAddress: "192.168.1.25",
+                    device: "iPad Pro Clinical Console",
+                    location: "Cardiology OPD Room 201",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["HIPAA_PRIVACY", "NABH_CHARTS", "DISHA"],
+                    createdAt: new Date(Date.now() - 16 * 60 * 60 * 1000)
+                },
+                {
+                    user: adminUserDoc?._id,
+                    userName: "Auditor Sunita Rao",
+                    userRole: "HOSPITAL_AUDITOR",
+                    action: "ACCESS_AUDIT_LOGS",
+                    entity: "AUDIT_REGISTER",
+                    entityName: "Monthly Clinical Peer Review",
+                    category: "DATA_ACCESS",
+                    severity: "INFO",
+                    status: "SUCCESS",
+                    details: "Hospital Quality Assurance officer extracted operative notes for monthly OT mortality & morbidity audit.",
+                    ipAddress: "192.168.1.18",
+                    device: "Auditor Terminal",
+                    location: "Medical Records Department",
+                    complianceTags: ["NABH", "QUALITY_AUDIT"],
+                    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000)
+                },
+
+                // 15.4 Record Change History (Field-level Diffs in ₹)
+                {
+                    user: adminUserDoc?._id,
+                    userName: "Sr. Billing Officer P. Ghosh",
+                    userRole: "BILLING_OFFICER",
+                    action: "UPDATE_INVOICE",
+                    entity: "INVOICE",
+                    entityName: "Invoice #INV-2024-0891",
+                    category: "RECORD_CHANGE",
+                    severity: "MEDIUM",
+                    status: "SUCCESS",
+                    details: "Adjusted bed room rent charge according to NABH concessional rate guidelines.",
+                    diffSummary: "Room rent rate changed from ₹6,500/day to ₹4,500/day. Net invoice total adjusted from ₹52,000 to ₹48,000.",
+                    oldValue: { dailyRoomRent: 6500, netTotal: 52000 },
+                    newValue: { dailyRoomRent: 4500, netTotal: 48000 },
+                    ipAddress: "192.168.1.42",
+                    location: "Central Billing Wing",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["TARIFF_REVISION", "FINANCIAL_AUDIT"],
+                    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
+                },
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "UPDATE_PRESCRIPTION",
+                    entity: "PRESCRIPTION",
+                    entityName: "Prescription #RX-2024-0192",
+                    category: "RECORD_CHANGE",
+                    severity: "MEDIUM",
+                    status: "SUCCESS",
+                    details: "Dosage titration following clinical review of renal profile lab results.",
+                    diffSummary: "Altered Enalapril dosage from 10mg once daily to 5mg once daily based on eGFR reports.",
+                    oldValue: { drug: "Enalapril", dose: "10mg OD" },
+                    newValue: { drug: "Enalapril", dose: "5mg OD" },
+                    ipAddress: "192.168.1.25",
+                    location: "Cardiology OPD",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["MEDICATION_SAFETY", "NABH"],
+                    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
+                },
+
+                // 15.5 Deleted Records (Forensic trail)
+                {
+                    user: doctorUserDoc?._id || adminUserDoc?._id,
+                    userName: doctorUserDoc ? `${doctorUserDoc.name}` : "Dr. Arjun Banerjee",
+                    userRole: "DOCTOR",
+                    action: "CANCEL_LAB_ORDER",
+                    entity: "LAB_ORDER",
+                    entityName: "Order #LAB-2024-9912 (Serum Electrolytes)",
+                    category: "DELETION",
+                    severity: "WARNING",
+                    status: "SUCCESS",
+                    details: "Cancelled redundant laboratory order entered mistakenly during ward rounds.",
+                    diffSummary: "Investigation voided: Serum Electrolytes (duplicate phlebotomy barcode cancelled)",
+                    ipAddress: "192.168.1.25",
+                    location: "Ward Block B",
+                    patientId: patientDoc?._id,
+                    complianceTags: ["LAB_STEWARDSHIP", "AUDIT_TRAIL"],
+                    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
+                },
+                {
+                    user: adminUserDoc?._id,
+                    userName: "Billing Supervisor A. Sen",
+                    userRole: "BILLING_OFFICER",
+                    action: "VOID_DRAFT_RECEIPT",
+                    entity: "BILLING",
+                    entityName: "Draft Bill #RCPT-DRAFT-0492",
+                    category: "DELETION",
+                    severity: "WARNING",
+                    status: "SUCCESS",
+                    details: "Voided draft outpatient consultation receipt valued at ₹1,200 due to wrong consultant selection.",
+                    diffSummary: "Draft receipt for ₹1,200 purged from active register before financial closure.",
+                    oldValue: { receiptNo: "RCPT-DRAFT-0492", amount: 1200, status: "DRAFT" },
+                    ipAddress: "192.168.1.42",
+                    location: "OPD Billing Desk",
+                    complianceTags: ["FINANCIAL_GOVERNANCE"],
+                    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000)
+                }
+            ];
+
+            await AuditLog.create(sampleAuditLogs);
+            console.log(`✅ Seeded ${sampleAuditLogs.length} baseline Audit & Compliance event records.`);
+        }
+
+        // 15.2 Seed Security Incidents
+        const existingSecurityCount = await SecurityEvent.countDocuments();
+        if (existingSecurityCount === 0) {
+            const adminDoc = await User.findOne({ email: DEFAULT_ADMIN_EMAIL }).lean();
+            const sampleSecurityEvents: any[] = [
+                {
+                    eventType: "BRUTE_FORCE_ATTEMPT",
+                    severity: "HIGH",
+                    status: "BLOCKED",
+                    ipAddress: "185.220.101.4",
+                    userAgent: "Hydra/9.5 (Network Security Scanner)",
+                    location: "External Tor Exit Node",
+                    details: "18 rapid failed authentication attempts in 45 seconds targeting /api/auth/login. IP blocked by firewall.",
+                    resolutionNotes: "Firewall rule auto-enforced: IP subnet 185.220.101.0/24 blacklisted for 30 days.",
+                    resolvedBy: adminDoc?._id,
+                    resolvedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000)
+                },
+                {
+                    eventType: "UNAUTHORIZED_RESOURCE_ACCESS",
+                    severity: "MEDIUM",
+                    status: "RESOLVED",
+                    ipAddress: "192.168.1.77",
+                    userName: "Receptionist Front Desk",
+                    location: "Ground Floor Registration",
+                    details: "Front desk staff user attempted direct HTTP GET request to /api/finance/credit-notes without permission.",
+                    resolutionNotes: "Audit review verified accidental bookmark click. Staff re-trained on assigned menu scopes.",
+                    resolvedBy: adminDoc?._id,
+                    resolvedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000)
+                },
+                {
+                    eventType: "SUSPICIOUS_IP_LOGIN",
+                    severity: "HIGH",
+                    status: "INVESTIGATING",
+                    ipAddress: "103.21.244.18",
+                    userName: "Dr. Priyadarshini Mukherjee",
+                    location: "Remote External Network",
+                    details: "Physician account accessed system outside normal shift hours from an unrecognized ISP network in Singapore.",
+                    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
+                },
+                {
+                    eventType: "MASS_DATA_EXPORT",
+                    severity: "MEDIUM",
+                    status: "RESOLVED",
+                    ipAddress: "192.168.1.42",
+                    userName: "Billing Manager T. Guha",
+                    location: "Central Billing Wing",
+                    details: "Bulk CSV export of 450 patient billing ledgers initiated from Financial Reports workstation.",
+                    resolutionNotes: "Verified as authorized quarterly statutory GST & TPA audit reconciliation file.",
+                    resolvedBy: adminDoc?._id,
+                    resolvedAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+                    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
+                }
+            ];
+
+            await SecurityEvent.create(sampleSecurityEvents);
+            console.log(`✅ Seeded ${sampleSecurityEvents.length} baseline Security Events & Threat Incidents.`);
+        }
+
+        // 15.3 Seed Regulatory Compliance Framework Reports
+        const existingComplianceCount = await ComplianceReport.countDocuments();
+        if (existingComplianceCount === 0) {
+            const sampleReports: any[] = [
+                {
+                    reportId: "COMP-2024-NABH-01",
+                    framework: "NABH",
+                    title: "NABH 5th Edition Hospital Comprehensive Clinical Audit",
+                    period: "FY 2024-25 (Q2 Pre-Assessment)",
+                    overallScore: 95,
+                    status: "COMPLIANT",
+                    auditDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                    auditorName: "Quality & Clinical Governance Cell",
+                    summary: "Demonstrated high adherence to National Accreditation Board for Hospitals guidelines across inpatient safety, medication reconciliation, and infection control.",
+                    findings: [
+                        {
+                            category: "Access, Assessment and Continuity of Care (AAC)",
+                            controlName: "AAC.1 Initial Assessment of Inpatients within 24 Hours",
+                            status: "PASS",
+                            score: 98,
+                            observation: "99.2% of emergency and planned admissions had complete clinical baseline recorded within 4 hours.",
+                            recommendation: "Maintain electronic clinical assessment checklist automation."
+                        },
+                        {
+                            category: "Care of Patients (COP)",
+                            controlName: "COP.3 Intensive Care & High Dependency Unit Guidelines",
+                            status: "PASS",
+                            score: 96,
+                            observation: "1:1 nurse-to-patient ratio maintained in ICU; daily multidisciplinary rounds documented.",
+                            recommendation: "Continue quarterly ICU mortality and central line infection reviews."
+                        },
+                        {
+                            category: "Management of Medication (MOM)",
+                            controlName: "MOM.4 Sound-Alike Look-Alike (LASA) Drug Separation",
+                            status: "PASS",
+                            score: 94,
+                            observation: "Color-coded dual check bins instituted in central pharmacy and emergency triage.",
+                            recommendation: "Periodic surprise checks on ward medication closets."
+                        },
+                        {
+                            category: "Patient Rights and Education (PRE)",
+                            controlName: "PRE.2 Informed Consent for High-Risk Surgical Procedures",
+                            status: "PASS",
+                            score: 92,
+                            observation: "Multilingual consent forms in English, Bengali, and Hindi validated in 100% surgical records.",
+                            recommendation: "Introduce electronic tablet-based video consent for complex cardiac interventions."
+                        }
+                    ]
+                },
+                {
+                    reportId: "COMP-2024-HIPAA-02",
+                    framework: "HIPAA",
+                    title: "HIPAA Privacy & Electronic Protected Health Information (ePHI) Audit",
+                    period: "Annual Compliance Audit 2024",
+                    overallScore: 92,
+                    status: "COMPLIANT",
+                    auditDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+                    auditorName: "CISO & Enterprise Information Security Team",
+                    summary: "Full encryption of patient health records at rest and in transit. Access controls enforce least privilege role-based authorization.",
+                    findings: [
+                        {
+                            category: "Technical Safeguards",
+                            controlName: "Access Control & Automatic Logoff (§ 164.312(a))",
+                            status: "PASS",
+                            score: 95,
+                            observation: "Inactivity timeout enforced at 30 minutes; unique credentials for all staff.",
+                            recommendation: "Mandate hardware security key MFA for external VPN users."
+                        },
+                        {
+                            category: "Audit Controls",
+                            controlName: "Audit Controls & Forensic Logging (§ 164.312(b))",
+                            status: "PASS",
+                            score: 94,
+                            observation: "Complete tamper-resistant logging of all PHI chart accesses, modifications, and deletions.",
+                            recommendation: "Maintain 7-year cold archival storage tier for forensic compliance."
+                        },
+                        {
+                            category: "Integrity Safeguards",
+                            controlName: "Protection from Alteration or Destruction (§ 164.312(c))",
+                            status: "PASS",
+                            score: 90,
+                            observation: "Field-level diff tracking records before and after states on all clinical entries.",
+                            recommendation: "Incorporate cryptographic digital signatures on laboratory result signoffs."
+                        }
+                    ]
+                },
+                {
+                    reportId: "COMP-2024-ABDM-03",
+                    framework: "DISHA_ABDM",
+                    title: "Ayushman Bharat Digital Mission (ABDM) Milestone 3 Audit",
+                    period: "National Digital Health Ecosystem 2024",
+                    overallScore: 88,
+                    status: "NEEDS_ATTENTION",
+                    auditDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+                    auditorName: "Digital Health Interoperability Taskforce",
+                    summary: "Hospital Health Repository Provider (HIP/HIU) services linked to ABDM sandbox. Minor consent artifact latency observed during peak hours.",
+                    findings: [
+                        {
+                            category: "Milestone 1: ABHA Number Generation & Linking",
+                            controlName: "Patient Consent-based ABHA Validation",
+                            status: "PASS",
+                            score: 94,
+                            observation: "86% of registered patients successfully issued or linked Ayushman Bharat Health Account (ABHA).",
+                            recommendation: "Introduce dedicated kiosk at reception for fast-track ABHA registration."
+                        },
+                        {
+                            category: "Milestone 2: Health Information Provider (HIP)",
+                            controlName: "Diagnostic Reports & Discharge Summary Bundling (FHIR R4)",
+                            status: "PASS",
+                            score: 91,
+                            observation: "Standard FHIR JSON document bundles generated for pathology and radiology reports.",
+                            recommendation: "Expand bundling to nursing medication chart summaries."
+                        },
+                        {
+                            category: "Milestone 3: Health Information User (HIU)",
+                            controlName: "Real-time Consent Manager Callback Processing",
+                            status: "FLAG",
+                            score: 79,
+                            observation: "Occasional timeouts during external Health Locker consent artifact verification under high load.",
+                            recommendation: "Upgrade async worker queue concurrency for ABDM gateway webhooks."
+                        }
+                    ],
+                    remediationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                }
+            ];
+
+            await ComplianceReport.create(sampleReports);
+            console.log(`✅ Seeded ${sampleReports.length} formal Regulatory Compliance Reports.`);
         }
 
         console.log("\n🎉 Complete database seeding finished successfully!");
