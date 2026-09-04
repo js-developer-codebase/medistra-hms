@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,15 +13,17 @@ import {
   Coins,
   CheckCircle2,
   Save,
-  Globe,
   RefreshCw,
   Sliders,
   Receipt,
-  Building
+  Building,
+  ArrowLeft,
+  Calculator
 } from "lucide-react";
 
 export default function CurrencyConfigPage() {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [currencySettings, setCurrencySettings] = useState({
@@ -33,13 +36,53 @@ export default function CurrencyConfigPage() {
     roundingMethod: "round"
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/config/settings?category=currency&map=true");
+      const data = await res.json();
+      if (data.success && data.data && Object.keys(data.data).length > 0) {
+        setCurrencySettings((prev) => ({ ...prev, ...data.data }));
+      }
+    } catch (err) {
+      console.error("Failed to load currency settings:", err);
+      toast("Failed to load currency settings from server.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setTimeout(() => {
+    try {
+      setSaving(true);
+      const settingsPayload = Object.entries(currencySettings).map(([key, value]) => ({
+        key,
+        value: String(value)
+      }));
+
+      const res = await fetch("/api/config/settings/bulk", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "currency", settings: settingsPayload })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast("System currency successfully set to Indian Rupees (₹ - INR) and saved to database!", "success");
+      } else {
+        toast(data.message || "Failed to save currency configuration.", "error");
+      }
+    } catch (err) {
+      console.error("Error saving currency settings:", err);
+      toast("Error saving currency configuration.", "error");
+    } finally {
       setSaving(false);
-      toast("System currency successfully set to Indian Rupees (₹ - INR)!", "success");
-    }, 600);
+    }
   };
 
   const formatSample = (amount: number) => {
@@ -58,28 +101,47 @@ export default function CurrencyConfigPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-2">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            Active Hospital Standard: Indian Rupee (₹)
+          <div className="flex items-center gap-2 mb-2">
+            <Link href="/config">
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2 gap-1 text-slate-500">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Config Hub
+              </Button>
+            </Link>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              Active Hospital Standard: Indian Rupee (₹)
+            </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Coins className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             System Currency & Monetary Configuration
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Configure system-wide primary currency, display symbols, numbering formatting, and billing representation.
+            Configure system-wide primary currency, display symbols, numbering formatting, and Indian Rupee billing representation.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button
             size="sm"
+            variant="outline"
+            onClick={fetchSettings}
+            disabled={loading || saving}
+            className="flex items-center gap-1.5"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Reload
+          </Button>
+
+          <Button
+            size="sm"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || loading}
             className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
           >
             <Save className="h-4 w-4" />
-            {saving ? "Saving..." : "Save Settings"}
+            {saving ? "Saving Changes..." : "Save Settings"}
           </Button>
         </div>
       </div>
@@ -94,7 +156,7 @@ export default function CurrencyConfigPage() {
                 <Sliders className="h-4 w-4 text-emerald-600" />
                 Primary Currency Setup
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 System default parameters applied to Outpatient Billing, Inpatient Admissions, Laboratory, and Pharmacy
               </CardDescription>
             </CardHeader>
@@ -200,10 +262,28 @@ export default function CurrencyConfigPage() {
                   </Select>
                 </div>
 
+                <div className="space-y-1.5">
+                  <Label htmlFor="roundingMethod" className="text-xs font-semibold">
+                    Invoice Round-off Policy
+                  </Label>
+                  <Select
+                    id="roundingMethod"
+                    value={currencySettings.roundingMethod}
+                    onChange={(e) =>
+                      setCurrencySettings({ ...currencySettings, roundingMethod: e.target.value })
+                    }
+                    className="h-9 text-xs"
+                  >
+                    <option value="round">Round to Nearest Rupee (₹ 500.60 ➔ ₹ 501.00)</option>
+                    <option value="floor">Floor (₹ 500.90 ➔ ₹ 500.00)</option>
+                    <option value="none">Exact Paise (No Rounding)</option>
+                  </Select>
+                </div>
+
                 <div className="pt-2">
-                  <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={saving}>
+                  <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={saving || loading}>
                     <Save className="h-4 w-4 mr-1.5" />
-                    {saving ? "Applying..." : "Apply Currency Configuration"}
+                    {saving ? "Applying Changes..." : "Apply Currency Configuration"}
                   </Button>
                 </div>
               </form>
@@ -256,8 +336,8 @@ export default function CurrencyConfigPage() {
 
               <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">Annual Surgical Package</div>
-                  <div className="text-[10px] text-slate-400">High-Value Grouping</div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">High-Value Surgical Package</div>
+                  <div className="text-[10px] text-slate-400">Lakhs & Crores Grouping</div>
                 </div>
                 <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono text-xs">
                   {formatSample(125000)}

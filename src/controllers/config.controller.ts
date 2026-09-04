@@ -9,11 +9,56 @@ export class ConfigController {
     async getSettings(request: NextRequest): Promise<NextResponse> {
         try {
             await dbConnect();
-            const settings = await this.configService.getSettings();
+            const { searchParams } = new URL(request.url);
+            const category = searchParams.get("category") || undefined;
+            const asMap = searchParams.get("map") === "true";
+
+            if (asMap && category) {
+                const map = await this.configService.getSettingsMap(category);
+                return NextResponse.json({ success: true, data: map }, { status: 200 });
+            }
+
+            const settings = await this.configService.getSettings(category);
             return NextResponse.json({ success: true, data: settings }, { status: 200 });
         } catch (error: any) {
             return NextResponse.json(
                 { success: false, message: error?.message || "Failed to fetch settings" },
+                { status: 500 }
+            );
+        }
+    }
+
+    async bulkUpdate(request: NextRequest): Promise<NextResponse> {
+        try {
+            await dbConnect();
+            const body = await request.json();
+            const { category, settings } = body;
+
+            if (!category) {
+                return NextResponse.json({ success: false, message: "Category is required" }, { status: 400 });
+            }
+            if (!settings || !Array.isArray(settings)) {
+                return NextResponse.json({ success: false, message: "Settings must be an array" }, { status: 400 });
+            }
+
+            const result = await this.configService.bulkUpdateSettings(category, settings);
+            return NextResponse.json({ success: true, data: result }, { status: 200 });
+        } catch (error: any) {
+            return NextResponse.json(
+                { success: false, message: error?.message || "Failed to bulk update settings" },
+                { status: error?.statusCode || 500 }
+            );
+        }
+    }
+
+    async getConfigStats(request: NextRequest): Promise<NextResponse> {
+        try {
+            await dbConnect();
+            const stats = await this.configService.getConfigStats();
+            return NextResponse.json({ success: true, data: stats }, { status: 200 });
+        } catch (error: any) {
+            return NextResponse.json(
+                { success: false, message: error?.message || "Failed to fetch configuration stats" },
                 { status: 500 }
             );
         }

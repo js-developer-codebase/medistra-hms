@@ -35,6 +35,7 @@ import BranchSetting from "./models/branch-setting.model";
 import AuditLog from "./models/audit-log.model";
 import SecurityEvent from "./models/security-event.model";
 import ComplianceReport from "./models/compliance-report.model";
+import SystemSetting from "./models/system-setting.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -2018,6 +2019,162 @@ async function seedDatabase() {
 
             await ComplianceReport.create(sampleReports);
             console.log(`✅ Seeded ${sampleReports.length} formal Regulatory Compliance Reports.`);
+        }
+
+        // ==========================================
+        // 16. SYSTEM CONFIGURATION SETTINGS
+        // ==========================================
+        const systemSettingCount = await SystemSetting.countDocuments();
+        if (systemSettingCount === 0) {
+            console.log("Seeding baseline System Configuration across 13 modules...");
+
+            const baselineSettings = [
+                // 1. General Settings
+                { category: "general", key: "hospital_name", value: "Medistra Super Speciality Hospital", description: "Official Hospital Legal Name" },
+                { category: "general", key: "hospital_tagline", value: "Excellence in Tertiary Healthcare & Clinical Research", description: "Public Branding Tagline" },
+                { category: "general", key: "hospital_email", value: "contact@medistra.in", description: "Official Contact Email" },
+                { category: "general", key: "hospital_phone", value: "+91 11 4982 5000", description: "Official Reception Phone Line" },
+                { category: "general", key: "hospital_emergency", value: "1066 / +91 11 4982 5099", description: "24x7 Emergency Helpline" },
+                { category: "general", key: "hospital_address", value: "Plot 12, Institutional Area, Sector 62, New Delhi - 110092, India", description: "Hospital Campus Physical Address" },
+                { category: "general", key: "hospital_website", value: "https://medistra.in", description: "Official Hospital Web Portal" },
+                { category: "general", key: "hospital_cin", value: "U85110DL2018PTC321456", description: "Corporate Identity Number (CIN)" },
+                { category: "general", key: "hospital_nabh", value: "NABH-2024-HOSP-0842", description: "NABH 5th Edition Accreditation ID" },
+
+                // 2. Localization
+                { category: "localization", key: "language", value: "en-IN", description: "Primary System Language (Indian English)" },
+                { category: "localization", key: "secondary_language", value: "hi-IN", description: "Secondary Regional Language (Hindi)" },
+                { category: "localization", key: "timezone", value: "Asia/Kolkata", description: "Standard Timezone" },
+                { category: "localization", key: "date_format", value: "DD/MM/YYYY", description: "Standard Date Display Format" },
+                { category: "localization", key: "time_format", value: "12h", description: "Time Format (12h/24h)" },
+                { category: "localization", key: "week_start", value: "Monday", description: "First Day of Operational Week" },
+                { category: "localization", key: "number_format", value: "en-IN", description: "Indian Numeral Grouping (Lakhs/Crores)" },
+
+                // 3. Currency (Strictly Indian Rupee INR / ₹)
+                { category: "currency", key: "currencyName", value: "Indian Rupee", description: "Full Currency Nomenclature" },
+                { category: "currency", key: "currencyCode", value: "INR", description: "ISO 4217 Currency Code" },
+                { category: "currency", key: "symbol", value: "₹", description: "Statutory Rupee Symbol" },
+                { category: "currency", key: "symbolPosition", value: "prefix", description: "Symbol Placement (Prefix ₹)" },
+                { category: "currency", key: "decimalPlaces", value: "2", description: "Decimal Precision for Invoices" },
+                { category: "currency", key: "numberFormat", value: "en-IN", description: "Lakhs and Crores Grouping System" },
+                { category: "currency", key: "roundingMethod", value: "round", description: "Rounding Method (Round to Nearest Rupee)" },
+
+                // 4. Timezone
+                { category: "timezone", key: "primary_timezone", value: "Asia/Kolkata", description: "National Standard Time (IST - UTC+05:30)" },
+                { category: "timezone", key: "utc_offset", value: "+05:30", description: "UTC Offset String" },
+                { category: "timezone", key: "ntp_server", value: "time.google.com", description: "Primary NTP Time Server" },
+                { category: "timezone", key: "sync_interval_mins", value: "15", description: "NTP Synchronization Interval (Minutes)" },
+                { category: "timezone", key: "daylight_saving", value: "disabled", description: "Daylight Saving Time Policy" },
+                { category: "timezone", key: "drift_tolerance_ms", value: "500", description: "Maximum Clock Drift Tolerance (ms)" },
+
+                // 5. Auto-Numbering Sequences
+                { category: "numbering", key: "uhid_prefix", value: "MED-UHID-", description: "Patient Master UHID Prefix" },
+                { category: "numbering", key: "uhid_digits", value: "6", description: "UHID Zero-padded Digit Length" },
+                { category: "numbering", key: "ipd_prefix", value: "MED-IPD-", description: "Inpatient Admission ID Prefix" },
+                { category: "numbering", key: "ipd_digits", value: "6", description: "IPD Zero-padded Digit Length" },
+                { category: "numbering", key: "opd_prefix", value: "OPD-", description: "Outpatient Token Sequence Prefix" },
+                { category: "numbering", key: "opd_digits", value: "4", description: "OPD Token Digit Length" },
+                { category: "numbering", key: "invoice_prefix", value: "INV-2026-", description: "Statutory Tax Invoice Prefix" },
+                { category: "numbering", key: "invoice_digits", value: "6", description: "Invoice Serial Digit Length" },
+                { category: "numbering", key: "prescription_prefix", value: "RX-", description: "Digital E-Prescription Prefix" },
+                { category: "numbering", key: "prescription_digits", value: "6", description: "Prescription Serial Length" },
+                { category: "numbering", key: "lab_prefix", value: "LAB-", description: "Laboratory Sample Barcode Prefix" },
+                { category: "numbering", key: "lab_digits", value: "6", description: "Lab Test Order Serial Length" },
+                { category: "numbering", key: "po_prefix", value: "PO-2026-", description: "Purchase Order Sequence Prefix" },
+                { category: "numbering", key: "po_digits", value: "5", description: "Purchase Order Digit Length" },
+
+                // 6. Appointment Settings
+                { category: "appointments", key: "slot_duration_mins", value: "15", description: "Standard Consultation Slot Duration (Mins)" },
+                { category: "appointments", key: "buffer_time_mins", value: "5", description: "Buffer Time Between Doctor Slots (Mins)" },
+                { category: "appointments", key: "advance_booking_days", value: "60", description: "Maximum Days in Advance for OPD Booking" },
+                { category: "appointments", key: "same_day_cutoff_hours", value: "2", description: "Minimum Hours Prior for Same-Day Booking" },
+                { category: "appointments", key: "cancellation_window_hours", value: "4", description: "Free Patient Cancellation Window (Hours)" },
+                { category: "appointments", key: "allow_overbooking", value: "false", description: "Permit Slot Overbooking by Reception" },
+                { category: "appointments", key: "max_overbooking_per_slot", value: "1", description: "Emergency Overbooking Ceiling" },
+                { category: "appointments", key: "teleconsult_enabled", value: "true", description: "Integrated WebRTC Teleconsultation Feature" },
+                { category: "appointments", key: "reminder_sms_hours", value: "24,2", description: "Automated SMS Reminder Intervals Before Slot" },
+
+                // 7. Billing Settings (Statutory Indian GST & ₹ Standards)
+                { category: "billing", key: "default_currency", value: "INR", description: "Primary Billing Currency" },
+                { category: "billing", key: "currency_symbol", value: "₹", description: "Currency Display Symbol" },
+                { category: "billing", key: "gst_medicine_rate", value: "12", description: "Standard Pharmaceutical GST Rate (%)" },
+                { category: "billing", key: "gst_diagnostic_rate", value: "0", description: "Diagnostic & Lab Test GST Rate (%) - Exempt" },
+                { category: "billing", key: "gst_consultation_rate", value: "0", description: "OPD Consultation GST Rate (%) - Exempt" },
+                { category: "billing", key: "gst_ward_high_rate", value: "5", description: "Deluxe/VIP Room GST Rate (%) for Tariff >₹5000" },
+                { category: "billing", key: "gst_ward_exemption_cutoff", value: "5000", description: "Room Rent GST Exemption Cutoff (₹/day)" },
+                { category: "billing", key: "payment_modes", value: "CASH,UPI,CREDIT_DEBIT_CARD,NETBANKING,TPA_INSURANCE,NEFT_RTGS", description: "Active Payment Gateways and Modes" },
+                { category: "billing", key: "credit_period_days", value: "30", description: "Corporate & TPA Credit Settlement Period (Days)" },
+                { category: "billing", key: "grace_period_days", value: "7", description: "Payment Due Grace Period (Days)" },
+                { category: "billing", key: "invoice_roundoff", value: "true", description: "Automatically Round Off Total Bill to Nearest Rupee" },
+
+                // 8. Clinical Settings
+                { category: "clinical", key: "diagnostic_coding", value: "ICD-10-CM", description: "Primary Diagnostic Classification Code System" },
+                { category: "clinical", key: "procedure_coding", value: "ICD-10-PCS", description: "Surgical & Procedure Coding Standard" },
+                { category: "clinical", key: "bp_systolic_high", value: "140", description: "Hypertension Systolic Alert Threshold (mmHg)" },
+                { category: "clinical", key: "bp_systolic_low", value: "90", description: "Hypotension Systolic Alert Threshold (mmHg)" },
+                { category: "clinical", key: "bp_diastolic_high", value: "90", description: "Hypertension Diastolic Alert Threshold (mmHg)" },
+                { category: "clinical", key: "bp_diastolic_low", value: "60", description: "Hypotension Diastolic Alert Threshold (mmHg)" },
+                { category: "clinical", key: "heart_rate_high", value: "100", description: "Tachycardia Alert Threshold (BPM)" },
+                { category: "clinical", key: "heart_rate_low", value: "50", description: "Bradycardia Alert Threshold (BPM)" },
+                { category: "clinical", key: "spo2_critical_low", value: "92", description: "Hypoxemia Critical SpO2 Threshold (%)" },
+                { category: "clinical", key: "blood_glucose_high", value: "200", description: "Hyperglycemia Alert Threshold (mg/dL)" },
+                { category: "clinical", key: "blood_glucose_low", value: "70", description: "Hypoglycemia Alert Threshold (mg/dL)" },
+                { category: "clinical", key: "allergy_interaction_check", value: "STRICT_BLOCK", description: "Drug-Drug & Allergy Contraindication Rule" },
+                { category: "clinical", key: "mandatory_clinician_signoff", value: "true", description: "Mandatory Digital Signature on Discharge Summaries" },
+
+                // 9. Laboratory Settings
+                { category: "laboratory", key: "panic_critical_notification", value: "IMMEDIATE_SMS_AND_CALL", description: "Panic Lab Result Notification Protocol" },
+                { category: "laboratory", key: "barcode_standard", value: "Code 128", description: "Specimen Vial Barcode Standard" },
+                { category: "laboratory", key: "specimen_rejection_protocol", value: "STRICT", description: "Specimen Hemolysis / Clot Rejection Policy" },
+                { category: "laboratory", key: "routine_tat_hours", value: "4", description: "Standard Outpatient Turnaround Time (Hours)" },
+                { category: "laboratory", key: "urgent_stat_tat_hours", value: "1", description: "STAT Emergency Turnaround Time (Hours)" },
+                { category: "laboratory", key: "potassium_panic_low", value: "2.5", description: "Critical Low Potassium Bound (mmol/L)" },
+                { category: "laboratory", key: "potassium_panic_high", value: "6.0", description: "Critical High Potassium Bound (mmol/L)" },
+                { category: "laboratory", key: "hemoglobin_panic_low", value: "7.0", description: "Critical Low Hemoglobin Bound (g/dL)" },
+                { category: "laboratory", key: "platelet_panic_low", value: "40000", description: "Critical Low Thrombocyte Bound (/mcL)" },
+                { category: "laboratory", key: "troponin_panic_high", value: "0.04", description: "Critical Troponin I Cutoff (ng/mL)" },
+
+                // 10. Pharmacy Settings
+                { category: "pharmacy", key: "dispensing_mode", value: "FEFO", description: "Stock Dispensing Valuation (First Expired First Out)" },
+                { category: "pharmacy", key: "schedule_h_prescription_mandatory", value: "true", description: "Mandatory Registered Doctor Rx for Schedule H/H1 Drugs" },
+                { category: "pharmacy", key: "schedule_x_dual_signoff", value: "true", description: "Dual Pharmacist Authorization for Schedule X Narcotics" },
+                { category: "pharmacy", key: "default_reorder_level", value: "50", description: "Default Safety Reorder Quantity (Packs)" },
+                { category: "pharmacy", key: "low_stock_threshold", value: "20", description: "Emergency Low Stock Red Alert Cutoff (Packs)" },
+                { category: "pharmacy", key: "auto_po_trigger", value: "true", description: "Automated Requisition Generation on Low Stock" },
+                { category: "pharmacy", key: "expiry_warning_days", value: "90", description: "Near-Expiry Quarantine Horizon (Days)" },
+
+                // 11. Notification Settings
+                { category: "notifications", key: "sms_gateway_provider", value: "NIC_CDAC_GOV", description: "Primary Telecom SMS Gateway Provider" },
+                { category: "notifications", key: "sms_sender_id", value: "MDSTRA", description: "TRAI Approved 6-Character SMS Sender Header" },
+                { category: "notifications", key: "whatsapp_api_status", value: "CONNECTED", description: "WhatsApp Business Cloud API Connection Status" },
+                { category: "notifications", key: "smtp_host", value: "smtp.medistra.in", description: "Hospital SMTP Outbound Mail Relay Server" },
+                { category: "notifications", key: "smtp_port", value: "587", description: "SMTP Secure Submission Port" },
+                { category: "notifications", key: "smtp_user", value: "notifications@medistra.in", description: "Hospital Dispatcher Email Account" },
+                { category: "notifications", key: "smtp_encryption", value: "STARTTLS", description: "Mail Transport Security Protocol" },
+                { category: "notifications", key: "notify_patient_appointment", value: "true", description: "Broadcast SMS Confirmation on OPD Booking" },
+                { category: "notifications", key: "notify_critical_lab_doctor", value: "true", description: "Automated Phone & SMS Alert to Doctor on Panic Lab" },
+                { category: "notifications", key: "notify_discharge_ready", value: "true", description: "Notify Patient Attendant on Final Bill Clearance" },
+
+                // 12. Integration Settings
+                { category: "integrations", key: "abdm_enabled", value: "true", description: "Ayushman Bharat Digital Mission (ABDM) Gateway Linkage" },
+                { category: "integrations", key: "abdm_environment", value: "PRODUCTION_SANDBOX", description: "ABDM Sandbox vs Live Production Profile" },
+                { category: "integrations", key: "abdm_hip_id", value: "IN0710000042", description: "National Health Registry Health Information Provider ID" },
+                { category: "integrations", key: "abdm_hiu_id", value: "HIU0710000042", description: "ABDM Health Information User Entity ID" },
+                { category: "integrations", key: "hl7_fhir_endpoint", value: "https://fhir.medistra.in/r4", description: "Interoperable HL7/FHIR R4 Diagnostic Server" },
+                { category: "integrations", key: "hl7_version", value: "FHIR R4", description: "FHIR Standard Release Specification" },
+                { category: "integrations", key: "pacs_dicom_server", value: "pacs.medistra.in:104", description: "Radiology DICOM PACS Storage Server Host" },
+                { category: "integrations", key: "pacs_ae_title", value: "MEDISTRA_PACS", description: "Application Entity (AE) Title for DICOM Nodes" },
+
+                // 13. API Settings
+                { category: "api", key: "api_gateway_enabled", value: "true", description: "Public REST API Gateway Activation State" },
+                { category: "api", key: "global_rate_limit_per_min", value: "120", description: "Client Rate Limit Ceiling (Requests per Minute)" },
+                { category: "api", key: "webhook_retry_count", value: "3", description: "Automated Webhook Failure Delivery Retries" },
+                { category: "api", key: "cors_allowed_origins", value: "https://medistra.in, https://portal.medistra.in", description: "Whitelisted Cross-Origin Resource Sharing Domains" },
+                { category: "api", key: "api_audit_level", value: "VERBOSE", description: "Forensic Payload Logging Level for API Invocations" },
+                { category: "api", key: "api_key_expiry_days", value: "90", description: "Developer Token Mandatory Rotation Interval (Days)" }
+            ];
+
+            await SystemSetting.create(baselineSettings);
+            console.log(`✅ Seeded ${baselineSettings.length} baseline System Configuration settings across all 13 modules.`);
         }
 
         console.log("\n🎉 Complete database seeding finished successfully!");

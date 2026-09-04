@@ -1,64 +1,57 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
-  Settings,
+  BellRing,
+  Save,
   MessageSquare,
   Mail,
-  ShieldCheck,
-  Zap,
-  CheckCircle2,
+  Smartphone,
   RefreshCw,
-  Save,
+  CheckCircle2,
+  ArrowLeft,
   Server,
   Radio,
-  Lock,
+  Sliders
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 
-export default function NotificationSettingsPage() {
+export default function NotificationsConfigPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testingSMS, setTestingSMS] = useState(false);
-  const [testingEmail, setTestingEmail] = useState(false);
 
-  // Settings State
-  const [settings, setSettings] = useState({
-    smsProvider: "FAST2SMS",
-    smsApiKey: "",
-    smsSenderId: "MEDSTR",
-    smsDltEntityId: "1101234567890",
-    smsCostPerCredit: 0.2, // ₹0.20
-    smsBalanceCredits: 4850,
-    emailProvider: "SMTP",
-    smtpHost: "smtp.medistra.in",
-    smtpPort: 587,
-    smtpSecure: false,
-    smtpUser: "notifications@medistra.in",
-    smtpPass: "",
-    emailFromName: "Medistra Super Speciality Hospital",
-    emailFromAddress: "noreply@medistra.in",
-    systemAlertSound: true,
-    autoRetryFailed: true,
-    maxRetryCount: 3,
+  const [formData, setFormData] = useState({
+    sms_gateway_provider: "NIC_CDAC_GOV",
+    sms_sender_id: "MDSTRA",
+    whatsapp_api_status: "CONNECTED",
+    smtp_host: "smtp.medistra.in",
+    smtp_port: "587",
+    smtp_user: "notifications@medistra.in",
+    smtp_encryption: "STARTTLS",
+    notify_patient_appointment: "true",
+    notify_critical_lab_doctor: "true",
+    notify_discharge_ready: "true"
   });
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/notifications/settings");
-      const json = await res.json();
-      if (json.success && json.data) {
-        setSettings(json.data);
+      const res = await fetch("/api/config/settings?category=notifications&map=true");
+      const data = await res.json();
+      if (data.success && data.data && Object.keys(data.data).length > 0) {
+        setFormData((prev) => ({ ...prev, ...data.data }));
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: "Failed to load notification settings", variant: "destructive" });
+    } catch (err) {
+      console.error("Failed to load notification settings:", err);
+      toast("Failed to load notification settings from server.", "error");
     } finally {
       setLoading(false);
     }
@@ -72,361 +65,320 @@ export default function NotificationSettingsPage() {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await fetch("/api/notifications/settings", {
+      const settingsPayload = Object.entries(formData).map(([key, value]) => ({
+        key,
+        value: String(value)
+      }));
+
+      const res = await fetch("/api/config/settings/bulk", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ category: "notifications", settings: settingsPayload })
       });
-      const json = await res.json();
-      if (json.success) {
-        toast({
-          title: "Settings Saved",
-          description: "Gateway credentials and notification policies updated.",
-        });
+
+      const data = await res.json();
+      if (data.success) {
+        toast("Communication gateways and broadcast triggers updated successfully!", "success");
       } else {
-        toast({ title: "Save Failed", description: json.message, variant: "destructive" });
+        toast(data.message || "Failed to update notification settings.", "error");
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err) {
+      console.error("Error saving notification settings:", err);
+      toast("Error saving settings to database.", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleTestPing = async (type: "SMS" | "EMAIL") => {
-    try {
-      if (type === "SMS") setTestingSMS(true);
-      else setTestingEmail(true);
-
-      const res = await fetch("/api/notifications/settings/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        toast({
-          title: `${type} Gateway Ping Succeeded`,
-          description: json.message,
-        });
-      } else {
-        toast({ title: "Ping Failed", description: json.message, variant: "destructive" });
-      }
-    } catch (err: any) {
-      toast({ title: "Test Failed", description: err.message, variant: "destructive" });
-    } finally {
-      if (type === "SMS") setTestingSMS(false);
-      else setTestingEmail(false);
-    }
-  };
-
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-lg">
-              <Settings className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Notification & Gateway Settings</h1>
-              <p className="text-xs md:text-sm text-muted-foreground">
-                Configure carrier SMS gateways, TRAI DLT compliance IDs, SMTP credentials, and alert retry rules.
-              </p>
+          <div className="flex items-center gap-2 mb-2">
+            <Link href="/config">
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2 gap-1 text-slate-500">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Config Hub
+              </Button>
+            </Link>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+              <BellRing className="h-3.5 w-3.5 text-orange-600" />
+              Multi-Channel Dispatch Engine
             </div>
           </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            Notification Gateways & Automated Triggers
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Configure National Telecom SMS gateways, WhatsApp Business Cloud APIs, hospital SMTP relays, and critical event broadcast rules.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchSettings} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={fetchSettings}
+            disabled={loading || saving}
+            className="flex items-center gap-1.5"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Reload
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-1.5" />
-            {saving ? "Saving..." : "Save Settings"}
+
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving || loading}
+            className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1.5"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving Changes..." : "Save Configuration"}
           </Button>
         </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Section 1: SMS Gateway Configuration */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-emerald-600" />
-                Telecom SMS Gateway (TRAI DLT Compliant)
-              </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => handleTestPing("SMS")}
-                disabled={testingSMS}
-              >
-                {testingSMS ? <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Zap className="w-3.5 h-3.5 mr-1" />}
-                Send Test Ping
-              </Button>
-            </div>
-            <CardDescription className="text-xs">
-              Direct connection to approved SMS carrier infrastructure for transactional alerts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Provider</Label>
-                <select
-                  className="w-full h-9 rounded-md border bg-background px-3 text-xs"
-                  value={settings.smsProvider}
-                  onChange={(e) => setSettings({ ...settings, smsProvider: e.target.value as any })}
-                >
-                  <option value="FAST2SMS">Fast2SMS (India)</option>
-                  <option value="MSG91">MSG91 Enterprise</option>
-                  <option value="TWILIO">Twilio Telecom</option>
-                  <option value="CUSTOM">Custom HTTP Gateway</option>
-                </select>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Controls (2 cols) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* SMS & WhatsApp Gateway Setup */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-orange-600" />
+                  SMS & Instant Messaging Gateways
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  National Telecom (DLT Registered) SMS delivery and WhatsApp Business Cloud connectivity.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sms_gateway_provider" className="text-xs font-semibold">
+                      Telecom SMS Provider *
+                    </Label>
+                    <Select
+                      id="sms_gateway_provider"
+                      value={formData.sms_gateway_provider}
+                      onChange={(e) => setFormData({ ...formData, sms_gateway_provider: e.target.value })}
+                      className="h-9 text-xs"
+                    >
+                      <option value="NIC_CDAC_GOV">NIC / CDAC National Health SMS Gateway (Govt)</option>
+                      <option value="AIRTEL_IQ">Airtel IQ Enterprise</option>
+                      <option value="JIO_TELECOM">Reliance Jio DLT Gateway</option>
+                      <option value="TWILIO">Twilio International</option>
+                    </Select>
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">DLT Approved Sender ID (Header) *</Label>
-                <Input
-                  className="h-9 font-mono"
-                  value={settings.smsSenderId}
-                  onChange={(e) => setSettings({ ...settings, smsSenderId: e.target.value })}
-                  placeholder="e.g. MEDSTR"
-                  required
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sms_sender_id" className="text-xs font-semibold">
+                      TRAI DLT Sender ID (6 Characters) *
+                    </Label>
+                    <Input
+                      id="sms_sender_id"
+                      maxLength={6}
+                      value={formData.sms_sender_id}
+                      onChange={(e) => setFormData({ ...formData, sms_sender_id: e.target.value.toUpperCase() })}
+                      required
+                      className="h-9 text-xs font-mono font-bold tracking-wider"
+                      placeholder="MDSTRA"
+                    />
+                  </div>
+                </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">TRAI Principal Entity ID *</Label>
-                <Input
-                  className="h-9 font-mono"
-                  value={settings.smsDltEntityId}
-                  onChange={(e) => setSettings({ ...settings, smsDltEntityId: e.target.value })}
-                  placeholder="e.g. 1101234567890"
-                  required
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp_api_status" className="text-xs font-semibold">
+                    WhatsApp Business Cloud API Status
+                  </Label>
+                  <Select
+                    id="whatsapp_api_status"
+                    value={formData.whatsapp_api_status}
+                    onChange={(e) => setFormData({ ...formData, whatsapp_api_status: e.target.value })}
+                    className="h-9 text-xs"
+                  >
+                    <option value="CONNECTED">Connected & Verified (Meta Business ID 10842910)</option>
+                    <option value="DISCONNECTED">Disconnected (Disabled)</option>
+                    <option value="SANDBOX">Sandbox Test Environment</option>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-xs">Gateway API Key / Token</Label>
-                <Input
-                  type="password"
-                  className="h-9 font-mono"
-                  value={settings.smsApiKey}
-                  onChange={(e) => setSettings({ ...settings, smsApiKey: e.target.value })}
-                  placeholder="Enter carrier API authorization secret key..."
-                />
-              </div>
+            {/* SMTP Outbound Email Server */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  Hospital SMTP Mail Relay Server
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Dedicated secure email server for electronic lab test report delivery, discharge summaries, and tax invoices.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp_host" className="text-xs font-semibold">
+                      SMTP Hostname *
+                    </Label>
+                    <Input
+                      id="smtp_host"
+                      value={formData.smtp_host}
+                      onChange={(e) => setFormData({ ...formData, smtp_host: e.target.value })}
+                      required
+                      className="h-9 text-xs font-mono"
+                      placeholder="smtp.medistra.in"
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Cost Per SMS Credit (INR)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-muted-foreground text-xs font-semibold">₹</span>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp_port" className="text-xs font-semibold">
+                      Port & Encryption
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        id="smtp_port"
+                        value={formData.smtp_port}
+                        onChange={(e) => setFormData({ ...formData, smtp_port: e.target.value })}
+                        className="h-9 text-xs font-mono"
+                        placeholder="587"
+                      />
+                      <Select
+                        value={formData.smtp_encryption}
+                        onChange={(e) => setFormData({ ...formData, smtp_encryption: e.target.value })}
+                        className="h-9 text-xs font-mono"
+                      >
+                        <option value="STARTTLS">STARTTLS</option>
+                        <option value="SSL_TLS">SSL/TLS</option>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="smtp_user" className="text-xs font-semibold">
+                    Sender Email Address *
+                  </Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    className="h-9 pl-7 font-mono"
-                    value={settings.smsCostPerCredit}
-                    onChange={(e) => setSettings({ ...settings, smsCostPerCredit: parseFloat(e.target.value) || 0.2 })}
+                    id="smtp_user"
+                    type="email"
+                    value={formData.smtp_user}
+                    onChange={(e) => setFormData({ ...formData, smtp_user: e.target.value })}
+                    required
+                    className="h-9 text-xs"
+                    placeholder="notifications@medistra.in"
                   />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Credits Counter Card */}
-            <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-900 flex items-center justify-between">
-              <div>
-                <span className="font-semibold text-emerald-800 dark:text-emerald-200 block text-xs">
-                  Active SMS Prepaid Balance
-                </span>
-                <span className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">
-                  {settings.smsBalanceCredits} Credits remaining (~₹{(settings.smsBalanceCredits * settings.smsCostPerCredit).toFixed(2)})
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-xs border-emerald-300 text-emerald-800 dark:text-emerald-200"
-                onClick={() => {
-                  setSettings({ ...settings, smsBalanceCredits: settings.smsBalanceCredits + 1000 });
-                  toast({ title: "Credits Added", description: "Simulated 1,000 credits added to gateway balance." });
-                }}
-              >
-                Top-up +1,000 Credits
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section 2: Email SMTP Configuration */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Mail className="w-5 h-5 text-blue-600" />
-                Hospital SMTP Server Settings
-              </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => handleTestPing("EMAIL")}
-                disabled={testingEmail}
-              >
-                {testingEmail ? <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Zap className="w-3.5 h-3.5 mr-1" />}
-                Send Test Ping
-              </Button>
-            </div>
-            <CardDescription className="text-xs">
-              Outbound mail transport settings for invoices, consultation receipts, and clinical reports.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-xs">SMTP Host Server *</Label>
-                <Input
-                  className="h-9 font-mono"
-                  value={settings.smtpHost}
-                  onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
-                  placeholder="e.g. smtp.medistra.in"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">SMTP Port *</Label>
-                <Input
-                  type="number"
-                  className="h-9 font-mono"
-                  value={settings.smtpPort}
-                  onChange={(e) => setSettings({ ...settings, smtpPort: parseInt(e.target.value, 10) || 587 })}
-                  placeholder="587"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Sender Display Name *</Label>
-                <Input
-                  className="h-9"
-                  value={settings.emailFromName}
-                  onChange={(e) => setSettings({ ...settings, emailFromName: e.target.value })}
-                  placeholder="Medistra Super Speciality Hospital"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Sender Email Address *</Label>
-                <Input
-                  type="email"
-                  className="h-9 font-mono"
-                  value={settings.emailFromAddress}
-                  onChange={(e) => setSettings({ ...settings, emailFromAddress: e.target.value })}
-                  placeholder="noreply@medistra.in"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">SMTP Username / Account</Label>
-                <Input
-                  className="h-9 font-mono"
-                  value={settings.smtpUser}
-                  onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
-                  placeholder="alerts@medistra.in"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">SMTP Password</Label>
-                <Input
-                  type="password"
-                  className="h-9 font-mono"
-                  value={settings.smtpPass}
-                  onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
-                  placeholder="••••••••••••"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section 3: Operational Policies */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-purple-600" />
-              Automated Dispatch & Retry Policies
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Control audible station sirens and automated retry thresholds on network failures.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 bg-muted/30 border rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="font-semibold block">Audible Siren on Code Red</span>
-                  <span className="text-[11px] text-muted-foreground">Play tone on ER triage alerts</span>
+            {/* Broadcast Triggers */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Radio className="h-4 w-4 text-emerald-600" />
+                  Automated Event Broadcast Triggers
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Toggle automated dispatches for key clinical milestones.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 dark:bg-slate-800">
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Patient OPD Appointment Booking</div>
+                    <div className="text-[11px] text-slate-400">Sends instant SMS + WhatsApp confirmation with token number and clinic map</div>
+                  </div>
+                  <Select
+                    value={formData.notify_patient_appointment}
+                    onChange={(e) => setFormData({ ...formData, notify_patient_appointment: e.target.value })}
+                    className="h-8 text-xs w-28"
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </Select>
                 </div>
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-primary"
-                  checked={settings.systemAlertSound}
-                  onChange={(e) => setSettings({ ...settings, systemAlertSound: e.target.checked })}
-                />
-              </div>
 
-              <div className="p-3 bg-muted/30 border rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="font-semibold block">Auto-Retry Failed SMS</span>
-                  <span className="text-[11px] text-muted-foreground">Re-transmit on network drop</span>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 dark:bg-slate-800">
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Critical Laboratory Panic Alert</div>
+                    <div className="text-[11px] text-slate-400">Emergency notification to attending physician phone when critical bounds exceeded</div>
+                  </div>
+                  <Select
+                    value={formData.notify_critical_lab_doctor}
+                    onChange={(e) => setFormData({ ...formData, notify_critical_lab_doctor: e.target.value })}
+                    className="h-8 text-xs w-28 font-semibold text-rose-600"
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </Select>
                 </div>
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-primary"
-                  checked={settings.autoRetryFailed}
-                  onChange={(e) => setSettings({ ...settings, autoRetryFailed: e.target.checked })}
-                />
-              </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">Max Automated Retries</Label>
-                <Input
-                  type="number"
-                  className="h-9"
-                  value={settings.maxRetryCount}
-                  onChange={(e) => setSettings({ ...settings, maxRetryCount: parseInt(e.target.value, 10) || 3 })}
-                  min={1}
-                  max={5}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 dark:bg-slate-800">
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Discharge Clearance Notification</div>
+                    <div className="text-[11px] text-slate-400">Notify family attendant when pharmacy, billing, and nursing clearance are signed</div>
+                  </div>
+                  <Select
+                    value={formData.notify_discharge_ready}
+                    onChange={(e) => setFormData({ ...formData, notify_discharge_ready: e.target.value })}
+                    className="h-8 text-xs w-28"
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Save Footer */}
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="submit" size="sm" disabled={saving}>
-            <Save className="w-4 h-4 mr-1.5" />
-            {saving ? "Saving Configuration..." : "Save Notification Settings"}
-          </Button>
+          {/* Right Sidebar: Gateway Health */}
+          <div className="space-y-5">
+            <Card className="border shadow-sm bg-gradient-to-br from-orange-50/50 to-slate-50 dark:from-slate-900 dark:to-orange-950/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                  <Radio className="h-4 w-4 text-orange-600 animate-pulse" />
+                  Gateway Operational Telemetry
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Active connection heartbeat
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2.5 text-xs">
+                <div className="p-2.5 rounded-md bg-white dark:bg-slate-900 border flex items-center justify-between">
+                  <span>DLT Sender ID:</span>
+                  <Badge className="bg-orange-100 text-orange-800 font-mono text-xs font-bold">
+                    {formData.sms_sender_id}
+                  </Badge>
+                </div>
+
+                <div className="p-2.5 rounded-md bg-white dark:bg-slate-900 border flex items-center justify-between">
+                  <span>WhatsApp Cloud:</span>
+                  <Badge className={formData.whatsapp_api_status === "CONNECTED" ? "bg-emerald-100 text-emerald-800 text-xs" : "bg-slate-100 text-slate-800 text-xs"}>
+                    {formData.whatsapp_api_status}
+                  </Badge>
+                </div>
+
+                <div className="p-2.5 rounded-md bg-white dark:bg-slate-900 border flex items-center justify-between">
+                  <span>SMTP Relay:</span>
+                  <Badge variant="outline" className="font-mono text-xs text-blue-600">
+                    {formData.smtp_host}:{formData.smtp_port}
+                  </Badge>
+                </div>
+
+                <div className="p-3 rounded-md bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 text-[11px] text-orange-800 dark:text-orange-300 flex items-start gap-2 mt-2">
+                  <CheckCircle2 className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block">TRAI DLT Template Registered</span>
+                    All transactional SMS messages follow mandatory Indian telecom header registration guidelines with 99.8% delivery rate.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </form>
     </div>
