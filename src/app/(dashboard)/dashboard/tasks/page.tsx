@@ -254,16 +254,16 @@ export default function TasksPage() {
               Assign New Task
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-slate-900 text-slate-100 border border-slate-800">
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-slate-100">Assign Hospital Duty</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogTitle>Assign Hospital Duty</DialogTitle>
+              <DialogDescription>
                 Designate medical duties, nursing instructions, or general tasks to staff.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-2">
               <div className="space-y-1">
-                <Label htmlFor="title" className="text-slate-300">Task Title *</Label>
+                <Label htmlFor="title">Task Title *</Label>
                 <Input
                   id="title"
                   name="title"
@@ -271,12 +271,11 @@ export default function TasksPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. Administer ECG or check vitals"
                   required
-                  className="bg-slate-950 border-slate-800 text-slate-100"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="description" className="text-slate-300">Detailed Description</Label>
+                <Label htmlFor="description">Detailed Description</Label>
                 <textarea
                   id="description"
                   name="description"
@@ -284,13 +283,13 @@ export default function TasksPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. Take reading for Bed 4 patient in ward block 2"
                   rows={2}
-                  className="w-full text-sm rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="assignedTo" className="text-slate-300">Assigned To *</Label>
+                  <Label htmlFor="assignedTo">Assigned To *</Label>
                   <Select
                     name="assignedTo"
                     value={formData.assignedTo}
@@ -306,7 +305,7 @@ export default function TasksPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="department" className="text-slate-300">Department</Label>
+                  <Label htmlFor="department">Department</Label>
                   <Select
                     name="department"
                     value={formData.department}
@@ -322,7 +321,7 @@ export default function TasksPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="patientId" className="text-slate-300">Related Patient (Optional)</Label>
+                <Label htmlFor="patientId">Related Patient (Optional)</Label>
                 <Select
                   name="patientId"
                   value={formData.patientId}
@@ -339,7 +338,7 @@ export default function TasksPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="priority" className="text-slate-300">Priority</Label>
+                  <Label htmlFor="priority">Priority</Label>
                   <Select
                     name="priority"
                     value={formData.priority}
@@ -353,7 +352,7 @@ export default function TasksPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="dueDate" className="text-slate-300">Due Date & Time *</Label>
+                  <Label htmlFor="dueDate">Due Date & Time *</Label>
                   <Input
                     id="dueDate"
                     name="dueDate"
@@ -361,7 +360,6 @@ export default function TasksPage() {
                     value={formData.dueDate}
                     onChange={handleInputChange}
                     required
-                    className="bg-slate-950 border-slate-800 text-slate-100"
                   />
                 </div>
               </div>
@@ -371,7 +369,6 @@ export default function TasksPage() {
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsDialogOpen(false)}
-                  className="border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900"
                 >
                   Cancel
                 </Button>

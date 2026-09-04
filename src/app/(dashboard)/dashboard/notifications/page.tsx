@@ -49,20 +49,28 @@ export default function NotificationsPage() {
       ]);
 
       const logsData = await logsRes.json();
-      if (logsData.success) setLogs(logsData.data);
+      if (logsData.success) {
+        setLogs(logsData.logs || logsData.data || []);
+      } else {
+        setLogs([]);
+      }
 
       const templatesData = await templatesRes.json();
-      if (templatesData.success) setTemplates(templatesData.data);
+      if (templatesData.success && Array.isArray(templatesData.data)) {
+        setTemplates(templatesData.data);
+      }
 
       const patientsData = await patientsRes.json();
-      if (patientsData.success) setPatients(patientsData.data);
+      if (patientsData.success && Array.isArray(patientsData.data)) {
+        setPatients(patientsData.data);
+        if (patientsData.data.length > 0) {
+          setFormData(prev => ({ ...prev, recipient: patientsData.data[0]._id }));
+        }
+      }
 
       const staffData = await staffRes.json();
-      if (staffData.success) setStaff(staffData.data);
-
-      // Set default recipient values
-      if (patientsData.success && patientsData.data.length > 0) {
-        setFormData(prev => ({ ...prev, recipient: patientsData.data[0]._id }));
+      if (staffData.success && Array.isArray(staffData.data)) {
+        setStaff(staffData.data);
       }
     } catch (error: any) {
       toast({
@@ -322,7 +330,7 @@ export default function NotificationsPage() {
             <div className="flex justify-center items-center py-8">
               <Loader2 className="animate-spin w-8 h-8 text-emerald-500" />
             </div>
-          ) : logs.length === 0 ? (
+          ) : (!logs || logs.length === 0) ? (
             <div className="text-center py-12 text-slate-400">
               No notifications dispatched yet. Use "Compose Message" to send your first alert.
             </div>
@@ -342,7 +350,7 @@ export default function NotificationsPage() {
                   <TableRow key={log._id}>
                     <TableCell>
                       <div className="font-semibold text-slate-900 dark:text-slate-100">
-                        {log.recipient?.name || "Deleted User/Patient"}
+                        {log.recipientName || log.recipient?.name || "Deleted User/Patient"}
                       </div>
                       <div className="text-xs text-slate-500">
                         Model: {log.recipientModel}

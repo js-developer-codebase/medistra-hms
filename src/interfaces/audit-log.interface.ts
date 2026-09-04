@@ -9,7 +9,7 @@ export type AuditCategory =
   | "SECURITY"
   | "DELETION";
 
-export type AuditSeverity = "INFO" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AuditSeverity = "INFO" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "WARNING";
 
 export type AuditStatus = "SUCCESS" | "FAILURE" | "WARNING" | "BLOCKED";
 

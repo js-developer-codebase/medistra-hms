@@ -26,7 +26,7 @@ const auditLogSchema = new Schema<IAuditLog>(
     },
     severity: {
       type: String,
-      enum: ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      enum: ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL", "WARNING"],
       default: "INFO",
       index: true,
     },

@@ -142,6 +142,7 @@ export default function AuditLogsPage() {
       case "HIGH":
         return <Badge variant="destructive" className="text-[10px] uppercase font-bold">{sev}</Badge>;
       case "MEDIUM":
+      case "WARNING":
         return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] uppercase font-bold">{sev}</Badge>;
       case "LOW":
         return <Badge variant="secondary" className="text-[10px] uppercase">{sev}</Badge>;
@@ -248,6 +249,7 @@ export default function AuditLogsPage() {
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>
                 <option value="CRITICAL">Critical</option>
+                <option value="WARNING">Warning</option>
               </select>
             </div>
 

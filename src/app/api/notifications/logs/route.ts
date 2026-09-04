@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       limit,
     });
 
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json({ success: true, data: result.logs, ...result });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

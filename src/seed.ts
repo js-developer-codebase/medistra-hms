@@ -36,6 +36,7 @@ import AuditLog from "./models/audit-log.model";
 import SecurityEvent from "./models/security-event.model";
 import ComplianceReport from "./models/compliance-report.model";
 import SystemSetting from "./models/system-setting.model";
+import Patient from "./models/patient.model";
 import "dotenv/config";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/medistra-hms";
@@ -636,17 +637,15 @@ async function seedDatabase() {
         console.log("Seeding menus...");
         for (const menuGroup of menusData) {
             const { children, ...parentData } = menuGroup;
-            // @ts-ignore
-            const parentMenu = await Menu.create(parentData);
+            const childIds = [];
             if (children && children.length > 0) {
-                const childIds = [];
                 for (const child of children) {
                     const childMenu = await Menu.create(child);
                     childIds.push(childMenu._id);
                 }
-                parentMenu.children = childIds;
-                await parentMenu.save();
             }
+            // @ts-ignore
+            await Menu.create({ ...parentData, children: childIds });
         }
         console.log(`✅ Successfully seeded ${menusData.length} parent menus with their children.`);
 
@@ -690,14 +689,22 @@ async function seedDatabase() {
         // 4. Seed Admin User
         console.log("Seeding super admin user...");
         const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, 10);
-        const adminUser = await User.create({
-            name: "Super Admin",
-            email: DEFAULT_ADMIN_EMAIL,
-            password: hashedPassword,
-            gender: "MALE",
-            role: roleDocs["SYSTEM_SUPER_ADMIN"]._id,
-            isActive: true
-        });
+        let adminUser = await User.findOne({ email: DEFAULT_ADMIN_EMAIL });
+        if (!adminUser) {
+            adminUser = await User.create({
+                name: "Super Admin",
+                email: DEFAULT_ADMIN_EMAIL,
+                password: hashedPassword,
+                gender: "MALE",
+                role: roleDocs["SYSTEM_SUPER_ADMIN"]._id,
+                isActive: true
+            });
+        } else {
+            adminUser.password = hashedPassword;
+            adminUser.role = roleDocs["SYSTEM_SUPER_ADMIN"]._id;
+            adminUser.isActive = true;
+            await adminUser.save();
+        }
         console.log(`✅ Successfully seeded admin user: ${adminUser.email}`);
 
         // 5. Seed Default Organization & Main Branch
@@ -1079,16 +1086,28 @@ async function seedDatabase() {
 
         const defaultHashedPassword = await bcrypt.hash("Hospital@2026", 10);
         for (const s of sampleStaffData) {
-            const user = await User.create({
-                name: s.name,
-                email: s.email,
-                password: defaultHashedPassword,
-                gender: s.gender,
-                phone: s.phone,
-                role: roleMap[s.role] || roleDocs["NURSE"]?._id || adminUser.role,
-                isActive: true
-            });
+            let user = await User.findOne({ email: s.email });
+            if (!user) {
+                user = await User.create({
+                    name: s.name,
+                    email: s.email,
+                    password: defaultHashedPassword,
+                    gender: s.gender,
+                    phone: s.phone,
+                    role: roleMap[s.role] || roleDocs["NURSE"]?._id || adminUser.role,
+                    isActive: true
+                });
+            } else {
+                user.name = s.name;
+                user.password = defaultHashedPassword;
+                user.gender = s.gender;
+                user.phone = s.phone;
+                user.role = roleMap[s.role] || roleDocs["NURSE"]?._id || adminUser.role;
+                user.isActive = true;
+                await user.save();
+            }
 
+            await Staff.deleteMany({ $or: [{ employeeId: s.employeeId }, { userId: user._id }] });
             await Staff.create({
                 userId: user._id,
                 employeeId: s.employeeId,
@@ -1567,7 +1586,7 @@ async function seedDatabase() {
         if (existingAuditCount === 0) {
             const adminUserDoc = await User.findOne({ email: DEFAULT_ADMIN_EMAIL }).lean();
             const doctorUserDoc = await User.findOne({ email: { $ne: DEFAULT_ADMIN_EMAIL } }).lean();
-            const patientDoc: any = await mongoose.model("Patient").findOne().lean();
+            const patientDoc: any = await Patient.findOne().lean();
 
             const sampleAuditLogs: any[] = [
                 // 15.1 System & User Activity Logs
@@ -1594,7 +1613,7 @@ async function seedDatabase() {
                     userRole: "DOCTOR",
                     action: "CREATE_CONSULTATION",
                     entity: "CLINICAL_RECORD",
-                    entityName: `Consultation for ${patientDoc ? patientDoc.firstName + ' ' + patientDoc.lastName : 'Rajat Sharma'}`,
+                    entityName: `Consultation for ${patientDoc ? (patientDoc.name || `${patientDoc.firstName || ''} ${patientDoc.lastName || ''}`.trim() || 'Rajat Sharma') : 'Rajat Sharma'}`,
                     category: "USER_ACTIVITY",
                     severity: "INFO",
                     status: "SUCCESS",
@@ -1716,7 +1735,7 @@ async function seedDatabase() {
                     userRole: "DOCTOR",
                     action: "VIEW_PHI_RECORD",
                     entity: "PATIENT_RECORD",
-                    entityName: `EHR Chart of ${patientDoc ? patientDoc.firstName + ' ' + patientDoc.lastName : 'Rajat Sharma'}`,
+                    entityName: `EHR Chart of ${patientDoc ? (patientDoc.name || `${patientDoc.firstName || ''} ${patientDoc.lastName || ''}`.trim() || 'Rajat Sharma') : 'Rajat Sharma'}`,
                     category: "DATA_ACCESS",
                     severity: "INFO",
                     status: "SUCCESS",
