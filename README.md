@@ -374,7 +374,44 @@ Medistra HMS encompasses **22 primary modules** and over **180 specialized clini
 
 ---
 
-## ⚡ Setup & Installation Guide
+## 🐳 Docker Deployment & Containerized Quickstart (Recommended)
+
+Medistra HMS includes fully pre-configured **Docker** and **Docker Compose** manifests with multi-stage Alpine builds, Next.js standalone optimization, healthchecks, and persistent volume storage.
+
+### 1. One-Command Full Stack Launch
+Start the Next.js Web App, MongoDB 7 database, and Mongo Express web administration GUI:
+```bash
+docker compose up -d
+```
+This builds the optimized standalone Next.js image (~180MB) and launches:
+- **Medistra HMS Web Portal**: [http://localhost:3000](http://localhost:3000)
+- **MongoDB Database**: `mongodb://localhost:27017`
+- **Mongo Express DB Admin GUI**: [http://localhost:8081](http://localhost:8081) *(User: `admin`, Pass: `medistra`)*
+
+### 2. Initialize & Seed Database Inside Container
+To populate the database with all 39 roles, navigation menus, and baseline settings:
+```bash
+docker compose exec app npm run seed
+```
+
+### 3. Management & Monitoring Commands
+```bash
+# View real-time container logs
+docker compose logs -f app
+
+# Check container health and status
+docker compose ps
+
+# Gracefully stop the stack (data is preserved in mongo-data volume)
+docker compose down
+
+# Stop and wipe volume data (clean slate reset)
+docker compose down -v
+```
+
+---
+
+## ⚡ Bare-Metal Local Setup (Without Docker)
 
 ### Prerequisites
 - **Node.js**: `v20.x` or higher (LTS recommended)
