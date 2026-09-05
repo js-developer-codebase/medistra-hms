@@ -88,13 +88,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col bg-white/70 dark:bg-slate-950/60 backdrop-blur-2xl border-r border-white/60 dark:border-white/10 text-slate-800 dark:text-slate-200 shadow-xl shadow-slate-900/5 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Sidebar Header Brand */}
-        <div className="flex h-16 items-center gap-3 border-b border-slate-200 dark:border-slate-800/80 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/30">
+        <div className="flex h-16 items-center gap-3 border-b border-white/50 dark:border-white/10 px-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 backdrop-blur-md shadow-sm shadow-emerald-500/10">
             <Activity className="h-5 w-5 animate-pulse" />
           </div>
           <div className="flex flex-col">
@@ -109,14 +109,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
         {/* Navigation Menu List */}
         <div className="flex-1 overflow-y-auto scrollbar-slim px-3 py-4 space-y-1">
-          <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Navigation Menu
           </div>
 
           {loading ? (
             <div className="space-y-2 px-3 py-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-9 w-full rounded-lg bg-slate-800/50 animate-pulse" />
+                <div key={i} className="h-9 w-full rounded-lg bg-white/40 dark:bg-slate-800/40 animate-pulse border border-white/20 dark:border-white/5" />
               ))}
             </div>
           ) : (
@@ -131,12 +131,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                     <button
                       onClick={() => toggleExpand(menu._id)}
                       className={cn(
-                        "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white",
-                        isActive ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20" : "text-slate-600 dark:text-slate-300"
+                        "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/60 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-white/40 dark:hover:border-white/5",
+                        isActive ? "bg-gradient-to-r from-emerald-500/15 to-teal-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 shadow-sm backdrop-blur-md" : "text-slate-600 dark:text-slate-300"
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <DynamicIcon name={menu.icon || "Folder"} className={cn("h-4 w-4", isActive ? "text-emerald-400" : "text-slate-400")} />
+                        <DynamicIcon name={menu.icon || "Folder"} className={cn("h-4 w-4", isActive ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400")} />
                         <span>{menu.name}</span>
                       </div>
                       {isExpanded ? (
@@ -150,8 +150,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                       href={menu.path || "#"}
                       onClick={() => setMobileOpen?.(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white",
-                        pathname === menu.path ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20" : "text-slate-600 dark:text-slate-300"
+                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 border",
+                        pathname === menu.path
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/25 border-emerald-400/30 font-semibold"
+                          : "text-slate-600 dark:text-slate-300 border-transparent hover:bg-white/60 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white hover:border-white/40 dark:hover:border-white/5"
                       )}
                     >
                       <DynamicIcon name={menu.icon || "Circle"} className={cn("h-4 w-4", pathname === menu.path ? "text-white" : "text-slate-400")} />
@@ -161,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
                   {/* Submenu Accordion */}
                   {hasChildren && isExpanded && (
-                    <div className="ml-4 pl-3 border-l border-slate-800 space-y-1 py-1">
+                    <div className="ml-4 pl-3 border-l border-emerald-500/20 dark:border-slate-800 space-y-1 py-1">
                       {menu.children?.map((child: MenuItem) => {
                         const childActive = pathname === child.path;
                         return (
@@ -170,10 +172,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                             href={child.path || "#"}
                             onClick={() => setMobileOpen?.(false)}
                             className={cn(
-                              "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:text-slate-900 dark:hover:text-white",
+                              "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border",
                               childActive
-                                ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-semibold"
-                                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-emerald-500/25 backdrop-blur-sm"
+                                : "text-slate-500 dark:text-slate-400 border-transparent hover:bg-white/50 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white"
                             )}
                           >
                             <DynamicIcon name={child.icon || "Circle"} className="h-3.5 w-3.5 opacity-80" />
@@ -190,10 +192,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
         </div>
 
         {/* User Profile & Footer Section */}
-        <div className="border-t border-slate-200 dark:border-slate-800/80 p-3 bg-slate-50 dark:bg-slate-950/40">
-          <div className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-800/60 p-3 shadow-sm dark:shadow-none border border-slate-100 dark:border-transparent">
+        <div className="border-t border-white/50 dark:border-white/10 p-3 bg-white/30 dark:bg-slate-950/40 backdrop-blur-md">
+          <div className="flex items-center justify-between rounded-xl bg-white/80 dark:bg-slate-900/60 p-3 shadow-md shadow-slate-900/5 border border-white/70 dark:border-white/10 backdrop-blur-lg">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold text-sm shadow-sm">
                 {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="flex flex-col truncate">
@@ -209,7 +211,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               title="Sign Out"
-              className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
               <LogOut className="h-4 w-4" />
             </button>
